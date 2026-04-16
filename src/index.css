@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --border-theme: #334155;
+  --text-main: #f8fafc;
+  --text-dim: #94a3b8;
+  --accent-green: #10b981;
+  --accent-red: #ef4444;
+  --accent-blue: #3b82f6;
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-border-theme: var(--border-theme);
+  --color-text-main: var(--text-main);
+  --color-text-dim: var(--text-dim);
+  --color-accent-green: var(--accent-green);
+  --color-accent-red: var(--accent-red);
+  --color-accent-blue: var(--accent-blue);
+  
+  --animate-blink: blink 1s step-end infinite;
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+}
+
+@layer base {
+  body {
+    @apply font-sans antialiased bg-bg text-text-main transition-colors duration-300;
+  }
+}
+
+@layer components {
+  .typing-char {
+    @apply relative transition-colors duration-150;
+  }
+  
+  .cursor {
+    @apply absolute -left-[1px] top-0 w-[2px] h-[1.2em] bg-accent-blue;
+  }
+
+  .btn-toggle {
+    @apply bg-surface border border-border-theme px-4 py-2 rounded-md text-text-dim text-[13px] font-semibold transition-all cursor-pointer;
+  }
+
+  .btn-toggle-active {
+    @apply border-accent-blue text-accent-blue ring-1 ring-accent-blue/20 bg-accent-blue/10;
+  }
+
+  .stat-card {
+    @apply bg-surface border border-border-theme p-5 rounded-xl text-center shadow-sm;
+  }
+
+  .typing-canvas {
+    @apply bg-surface border border-border-theme rounded-2xl p-10 flex flex-col justify-center min-h-[280px];
+  }
+}
