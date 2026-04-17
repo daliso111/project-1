@@ -16,8 +16,8 @@ export function DailyGoals({ history }: DailyGoalsProps) {
   const sessionsToday = history.filter(s => new Date(s.date).toDateString() === today);
   const maxWpmToday = sessionsToday.reduce((max, s) => Math.max(max, s.wpm), 0);
 
-  const wpmProgress = Math.min(100, (maxWpmToday / goals.targetWpm) * 100);
-  const sessionProgress = Math.min(100, (sessionsToday.length / goals.targetSessions) * 100);
+  const wpmProgress = Math.min(100, Math.round((maxWpmToday / goals.targetWpm) * 100));
+  const sessionProgress = Math.min(100, Math.round((sessionsToday.length / goals.targetSessions) * 100));
 
   const updateGoal = (key: 'targetWpm' | 'targetSessions', value: string) => {
     const num = parseInt(value) || 0;

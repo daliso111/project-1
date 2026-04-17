@@ -2,11 +2,14 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { QUOTES, COMMON_WORDS, Difficulty, PracticeMode, TimeLimit } from '../constants';
 import { calculateWPM, calculateAccuracy } from '../lib/utils';
 
+export type SessionEndReason = 'completed' | 'timeout';
+
 interface TypingState {
   text: string;
   userInput: string;
   isStarted: boolean;
   isFinished: boolean;
+  sessionEndReason: SessionEndReason | null;
   timeLeft: number;
   startTime: number | null;
   errors: number;
@@ -29,6 +32,7 @@ export function useTypingEngine(
     userInput: '',
     isStarted: false,
     isFinished: false,
+    sessionEndReason: null,
     timeLeft: timeLimit,
     startTime: null,
     errors: 0,
@@ -74,18 +78,21 @@ export function useTypingEngine(
     return result;
   }, [mode, difficulty, selectedLanguage, punctMode, customText]);
 
-  const reset = useCallback(() => {
-    const newText = generateText();
-    setState({
-      text: newText,
-      userInput: '',
-      isStarted: false,
-      isFinished: false,
-      timeLeft: mode === 'Time Attack' ? timeLimit : 0,
-      startTime: null,
-      errors: 0,
-      missedKeys: {},
-      correctChars: 0,
+  const reset = useCallback((keepText: boolean = false) => {
+    setState(prev => {
+      const newText = keepText ? prev.text : generateText();
+      return {
+        text: newText,
+        userInput: '',
+        isStarted: false,
+        isFinished: false,
+        sessionEndReason: null,
+        timeLeft: mode === 'Time Attack' ? timeLimit : 0,
+        startTime: null,
+        errors: 0,
+        missedKeys: {},
+        correctChars: 0,
+      };
     });
     if (timerRef.current) clearInterval(timerRef.current);
   }, [generateText, mode, timeLimit]);
@@ -126,10 +133,13 @@ export function useTypingEngine(
 
       // Check if finished
       const isFinished = value.length === prev.text.length;
+      let sessionEndReason = prev.sessionEndReason;
+      
       if (isFinished) {
         if (timerRef.current) clearInterval(timerRef.current);
+        sessionEndReason = 'completed';
       }
-
+ 
       return {
         ...prev,
         userInput: value,
@@ -138,20 +148,32 @@ export function useTypingEngine(
         errors,
         missedKeys,
         correctChars,
-        isFinished
+        isFinished,
+        sessionEndReason
       };
     });
   }, [state.isFinished]);
 
   useEffect(() => {
-    if (state.isStarted && !state.isFinished && mode === 'Time Attack') {
+    if (state.isStarted && !state.isFinished) {
       timerRef.current = setInterval(() => {
         setState(prev => {
-          if (prev.timeLeft <= 1) {
-            if (timerRef.current) clearInterval(timerRef.current);
-            return { ...prev, timeLeft: 0, isFinished: true, isStarted: false };
+          if (mode === 'Time Attack') {
+            if (prev.timeLeft <= 1) {
+              if (timerRef.current) clearInterval(timerRef.current);
+              return { 
+                ...prev, 
+                timeLeft: 0, 
+                isFinished: true, 
+                isStarted: false,
+                sessionEndReason: 'timeout' 
+              };
+            }
+            return { ...prev, timeLeft: prev.timeLeft - 1 };
+          } else {
+            // Word Sprint, Code, Custom - count up
+            return { ...prev, timeLeft: prev.timeLeft + 1 };
           }
-          return { ...prev, timeLeft: prev.timeLeft - 1 };
         });
       }, 1000);
     }

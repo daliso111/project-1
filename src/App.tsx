@@ -37,7 +37,17 @@ export default function App() {
   // Persistence
   const [history, setHistory] = useState<SessionResult[]>(() => {
     const stored = localStorage.getItem('swifttype_history');
-    return stored ? JSON.parse(stored) : [];
+    if (!stored) return [];
+    try {
+      const parsed: SessionResult[] = JSON.parse(stored);
+      // Clean up bugged accuracies and ensure all fields are correct
+      return parsed.map(s => ({
+        ...s,
+        accuracy: Math.min(100, s.accuracy)
+      }));
+    } catch (e) {
+      return [];
+    }
   });
 
   const { theme, setTheme } = useTheme();
@@ -68,6 +78,7 @@ export default function App() {
     userInput,
     isStarted,
     isFinished,
+    sessionEndReason,
     timeLeft,
     wpm,
     accuracy,
@@ -112,6 +123,37 @@ export default function App() {
       });
     }
   }, [isFinished]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isFinished) return;
+
+      if (sessionEndReason === 'completed') {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          reset(false); // Continue: new text
+        } else if (e.key === 'Tab') {
+          e.preventDefault();
+          reset(true); // Try Again: same text
+        } else if (e.key.toLowerCase() === 's') {
+          e.preventDefault();
+          reset();
+          setActiveTab('stats');
+        }
+      } else if (sessionEndReason === 'timeout') {
+        if (e.key === 'Enter' || e.key === 'Tab') {
+          e.preventDefault();
+          reset(false); // Try Again: fresh prompt
+        } else if (e.key.toLowerCase() === 's') {
+          e.preventDefault();
+          reset();
+          setActiveTab('stats');
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFinished, reset, sessionEndReason]);
 
   const personalBest = history.reduce((max, s) => Math.max(max, s.wpm), 0);
 
@@ -160,6 +202,29 @@ export default function App() {
                </button>
              ))}
           </div>
+
+          {mode === 'Time Attack' && (
+            <>
+              <div className="w-px h-6 bg-border-theme" />
+              <div className="flex gap-2">
+                 {([30, 60, 120] as TimeLimit[]).map((t) => (
+                   <button
+                     key={t}
+                     disabled={isStarted || isFinished}
+                     onClick={() => setTimeLimit(t)}
+                     className={cn(
+                       "px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider transition-all border",
+                       timeLimit === t 
+                         ? "bg-accent-blue/10 border-accent-blue text-accent-blue ring-1 ring-accent-blue/20" 
+                         : "bg-surface border-border-theme text-text-dim hover:text-text-main"
+                     )}
+                   >
+                     {t}s
+                   </button>
+                 ))}
+              </div>
+            </>
+          )}
 
           <div className="w-px h-6 bg-border-theme" />
 
@@ -491,13 +556,74 @@ export default function App() {
                 </div>
               </div>
 
-              <button
-                onClick={reset}
-                className="w-full py-4 bg-accent-blue text-white rounded-xl font-bold uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
-              >
-                Next Session
-                <ChevronRight size={18} />
-              </button>
+              <div className="flex flex-col sm:flex-row gap-4">
+                {sessionEndReason === 'completed' ? (
+                  <>
+                    <div className="flex-1 space-y-2">
+                      <button
+                        onClick={() => reset(false)}
+                        className="w-full py-4 bg-accent-blue text-white rounded-xl font-bold uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
+                      >
+                        <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                        Continue
+                      </button>
+                      <p className="text-[9px] text-text-dim/60 text-center font-bold uppercase tracking-wider">↵ Enter</p>
+                    </div>
+
+                    <div className="flex-1 space-y-2">
+                      <button
+                        onClick={() => reset(true)}
+                        className="w-full py-4 bg-transparent border-2 border-accent-blue/30 text-accent-blue rounded-xl font-bold uppercase tracking-widest hover:bg-accent-blue/5 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                      >
+                        <RotateCcw size={18} />
+                        Try Again
+                      </button>
+                      <p className="text-[9px] text-text-dim/60 text-center font-bold uppercase tracking-wider">⇥ Tab</p>
+                    </div>
+
+                    <div className="flex-1 space-y-2">
+                      <button
+                        onClick={() => {
+                          reset();
+                          setActiveTab('stats');
+                        }}
+                        className="w-full py-4 bg-transparent text-text-dim/60 rounded-xl font-bold uppercase tracking-widest hover:text-text-main active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                      >
+                        <BarChart3 size={18} />
+                        View Stats
+                      </button>
+                      <p className="text-[9px] text-text-dim/60 text-center font-bold uppercase tracking-wider">S Key</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex-1 space-y-2">
+                      <button
+                        onClick={() => reset(false)}
+                        className="w-full py-4 bg-accent-blue text-white rounded-xl font-bold uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                      >
+                        <RotateCcw size={18} />
+                        Try Again
+                      </button>
+                      <p className="text-[9px] text-text-dim/60 text-center font-bold uppercase tracking-wider">↵ Enter or ⇥ Tab</p>
+                    </div>
+
+                    <div className="flex-1 space-y-2">
+                      <button
+                        onClick={() => {
+                          reset();
+                          setActiveTab('stats');
+                        }}
+                        className="w-full py-4 bg-transparent border-2 border-border-theme text-text-dim rounded-xl font-bold uppercase tracking-widest hover:text-text-main hover:border-text-dim/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                      >
+                        <BarChart3 size={18} />
+                        View Stats
+                      </button>
+                      <p className="text-[9px] text-text-dim/60 text-center font-bold uppercase tracking-wider">S Key</p>
+                    </div>
+                  </>
+                )}
+              </div>
             </motion.div>
           </div>
         )}

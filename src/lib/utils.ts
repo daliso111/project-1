@@ -20,5 +20,5 @@ export function calculateWPM(chars: number, timeInSeconds: number): number {
 
 export function calculateAccuracy(correct: number, total: number): number {
   if (total === 0) return 0;
-  return Math.round((correct / total) * 100);
+  return Math.min(100, Math.round((correct / total) * 100));
 }
