@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { db } from './firebase'; // This imports the file you just created
-import { collection, addDoc } from 'firebase/firestore';
+import { db, auth } from './firebase'; // This imports the file you just created
+import { doc, setDoc } from 'firebase/firestore';
+import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { Login } from './components/Login';
+import { Signup } from './components/Signup';
+import { ProfileSetup } from './components/ProfileSetup';
 import { 
   Timer, 
   Settings, 
@@ -17,6 +21,8 @@ import {
   Volume2,
   VolumeX,
   Palette,
+ LogOut,
+  User as UserIcon,
   Leaf
 } from 'lucide-react';
 import { Difficulty, PracticeMode, TimeLimit, SessionResult } from './constants';
@@ -38,6 +44,29 @@ import { useAdaptiveDifficulty } from './hooks/useAdaptiveDifficulty';
 import { Analytics } from '@vercel/analytics/react';
 
 export default function App() {
+  const [user, setUser] = useState<User | null>(null);
+  const [isProfilePending, setIsProfilePending] = useState(false);
+  const [authView, setAuthView] = useState<'login' | 'signup'>('signup');
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setIsProfilePending(!!currentUser && !currentUser.displayName);
+      setIsAuthChecking(false);
+    });
+
+    // Fallback to ensure we don't get stuck in auth checking state
+    const timer = setTimeout(() => {
+      setIsAuthChecking(false);
+    }, 3000);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timer);
+    };
+  }, []);
+
   // Persistence
   const [history, setHistory] = useState<SessionResult[]>(() => {
     const stored = localStorage.getItem('swifttype_history');
@@ -83,15 +112,18 @@ export default function App() {
   const { unlockedIds, checkBadges } = useBadges();
 
   const saveUserStats = async (wpm: number, accuracy: number) => {
-    try {
-      await addDoc(collection(db, 'user_stats'), {
-        wpm,
-        accuracy,
-        timestamp: new Date()
-      });
-      console.log('Stats saved successfully');
-    } catch (e) {
-      console.error('Error saving stats:', e);
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          wpm,
+          accuracy,
+          lastUpdated: new Date()
+        });
+        console.log('Stats saved successfully');
+      } catch (e) {
+        console.error('Error saving stats:', e);
+      }
     }
   };
 
@@ -185,6 +217,50 @@ export default function App() {
   const focusInput = () => {
     inputRef.current?.focus();
   };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
+  };
+
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+          className="w-8 h-8 border-4 border-accent-blue border-t-transparent rounded-full"
+        />
+      </div>
+    );
+  }
+
+  if (!user || isProfilePending) {
+    return (
+      <div className="min-h-screen bg-bg transition-colors duration-300">
+        <header className="fixed top-0 w-full z-50 px-10 py-6 flex justify-between items-center border-b border-border-theme bg-bg/80 backdrop-blur-md">
+          <div className="flex items-center gap-2 cursor-default">
+            <div className="text-2xl font-extrabold tracking-tighter text-text-main">
+              Type<span className="text-accent-blue">Flow</span>
+            </div>
+          </div>
+        </header>
+        <main className="container mx-auto max-w-[900px] pt-40 pb-20 px-6">
+          {isProfilePending && user ? (
+            <ProfileSetup user={user} onComplete={() => setIsProfilePending(false)} />
+          ) : authView === 'login' ? (
+            <Login onSwitchToSignup={() => setAuthView('signup')} />
+          ) : (
+            <Signup onSwitchToLogin={() => setAuthView('login')} />
+          )}
+        </main>
+        <Toaster />
+      </div>
+    );
+  }
 
   const onInputChange = (val: string) => {
     if (val.length > userInput.length) {
@@ -385,6 +461,24 @@ export default function App() {
             {activeTab === 'practice' ? <BarChart3 size={20} /> : <Layout size={20} />}
             <span className="text-[13px] font-semibold hidden sm:inline">{activeTab === 'practice' ? 'Stats' : 'Practice'}</span>
           </button>
+
+          <div className="w-px h-6 bg-border-theme" />
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-surface border border-border-theme rounded-lg">
+              <UserIcon size={14} className="text-text-dim" />
+              <span className="text-[11px] font-bold text-text-main truncate max-w-[100px]">
+                {user.displayName || user.email?.split('@')[0]}
+              </span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="p-2 text-text-dim hover:text-accent-red transition-colors"
+              title="Logout"
+            >
+              <LogOut size={18} />
+            </button>
+          </div>
         </div>
       </header>
 
