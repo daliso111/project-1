@@ -35,6 +35,7 @@ import { useTheme } from './contexts/ThemeContext';
 import { THEMES } from './themes';
 import { useSounds } from './hooks/useSounds';
 import { useAdaptiveDifficulty } from './hooks/useAdaptiveDifficulty';
+import { Analytics } from '@vercel/analytics/react';
 
 export default function App() {
   // Persistence
@@ -687,6 +688,7 @@ export default function App() {
           geometric balance &middot; typeflow precision
         </p>
       </footer>
+      <Analytics />
     </div>
   );
 }
