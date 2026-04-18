@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { db } from './firebase'; // This imports the file you just created
+import { collection, addDoc } from 'firebase/firestore';
 import { 
   Timer, 
   Settings, 
