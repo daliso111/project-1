@@ -5,6 +5,7 @@ import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { Login } from './components/Login';
 import { Signup } from './components/Signup';
+import { ProfileSetup } from './components/ProfileSetup';
 import { 
   Timer, 
   Settings, 
@@ -21,7 +22,8 @@ import {
   VolumeX,
   Palette,
   LogOut,
-  User as UserIcon
+  User as UserIcon,
+  Leaf
 } from 'lucide-react';
 import { Difficulty, PracticeMode, TimeLimit, SessionResult } from './constants';
 import { useTypingEngine } from './hooks/useTypingEngine';
@@ -42,12 +44,14 @@ import { useAdaptiveDifficulty } from './hooks/useAdaptiveDifficulty';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
+  const [isProfilePending, setIsProfilePending] = useState(false);
   const [authView, setAuthView] = useState<'login' | 'signup'>('signup');
   const [isAuthChecking, setIsAuthChecking] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      setIsProfilePending(!!currentUser && !currentUser.displayName);
       setIsAuthChecking(false);
     });
 
@@ -228,7 +232,7 @@ export default function App() {
     );
   }
 
-  if (!user) {
+  if (!user || isProfilePending) {
     return (
       <div className="min-h-screen bg-bg transition-colors duration-300">
         <header className="fixed top-0 w-full z-50 px-10 py-6 flex justify-between items-center border-b border-border-theme bg-bg/80 backdrop-blur-md">
@@ -239,7 +243,9 @@ export default function App() {
           </div>
         </header>
         <main className="container mx-auto max-w-[900px] pt-40 pb-20 px-6">
-          {authView === 'login' ? (
+          {isProfilePending && user ? (
+            <ProfileSetup user={user} onComplete={() => setIsProfilePending(false)} />
+          ) : authView === 'login' ? (
             <Login onSwitchToSignup={() => setAuthView('signup')} />
           ) : (
             <Signup onSwitchToLogin={() => setAuthView('login')} />
