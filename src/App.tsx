@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { db } from './firebase'; // This imports the file you just created
+import { collection, addDoc } from 'firebase/firestore';
 import { 
   Timer, 
   Settings, 
@@ -73,6 +75,19 @@ export default function App() {
   const { streak, updateStreak } = useStreak();
   const { unlockedIds, checkBadges } = useBadges();
 
+  const saveUserStats = async (wpm: number, accuracy: number) => {
+    try {
+      await addDoc(collection(db, 'user_stats'), {
+        wpm,
+        accuracy,
+        timestamp: new Date()
+      });
+      console.log('Stats saved successfully');
+    } catch (e) {
+      console.error('Error saving stats:', e);
+    }
+  };
+
   const {
     text,
     userInput,
@@ -121,6 +136,9 @@ export default function App() {
         streak: streak + 1, // Current session increments streak
         codeSessions
       });
+
+      // Save stats to Firestore
+      saveUserStats(wpm, accuracy);
     }
   }, [isFinished]);
 
