@@ -68,20 +68,7 @@ export default function App() {
   }, []);
 
   // Persistence
-  const [history, setHistory] = useState<SessionResult[]>(() => {
-    const stored = localStorage.getItem('swifttype_history');
-    if (!stored) return [];
-    try {
-      const parsed: SessionResult[] = JSON.parse(stored);
-      // Clean up bugged accuracies and ensure all fields are correct
-      return parsed.map(s => ({
-        ...s,
-        accuracy: Math.min(100, s.accuracy)
-      }));
-    } catch (e) {
-      return [];
-    }
-  });
+  const [history, setHistory] = useState<SessionResult[]>([]);
 
   const { theme, setTheme } = useTheme();
   const { isMuted, setIsMuted, playCorrect, playError, playComplete } = useSounds();
@@ -102,14 +89,35 @@ export default function App() {
   const [selectedLanguage, setSelectedLanguage] = useState('All');
   const [customText, setCustomText] = useState('');
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
-  const [isZenMode, setIsZenMode] = useState(() => localStorage.getItem('swifttype_zen_mode') === 'true');
+  const [isZenMode, setIsZenMode] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('swifttype_zen_mode', isZenMode.toString());
-  }, [isZenMode]);
+    if (user) {
+      const storedHistory = localStorage.getItem(`swifttype_history_${user.uid}`);
+      if (storedHistory) {
+        try {
+          const parsed: SessionResult[] = JSON.parse(storedHistory);
+          setHistory(parsed.map(s => ({
+            ...s,
+            accuracy: Math.min(100, s.accuracy)
+          })));
+        } catch (e) {
+          setHistory([]);
+        }
+      } else {
+        setHistory([]);
+      }
 
-  const { streak, updateStreak } = useStreak();
-  const { unlockedIds, checkBadges } = useBadges();
+      const storedZen = localStorage.getItem(`swifttype_zen_mode_${user.uid}`);
+      setIsZenMode(storedZen === 'true');
+    } else {
+      setHistory([]);
+      setIsZenMode(false);
+    }
+  }, [user]);
+
+  const { streak, updateStreak } = useStreak(user?.uid);
+  const { unlockedIds, checkBadges } = useBadges(user?.uid);
 
   const saveUserStats = async (wpm: number, accuracy: number) => {
     const user = auth.currentUser;
@@ -161,7 +169,9 @@ export default function App() {
       };
       const newHistory = [...history, result];
       setHistory(newHistory);
-      localStorage.setItem('swifttype_history', JSON.stringify(newHistory));
+      if (user) {
+        localStorage.setItem(`swifttype_history_${user.uid}`, JSON.stringify(newHistory));
+      }
       
       // Update streak and check achievements
       updateStreak();
@@ -220,6 +230,8 @@ export default function App() {
 
   const handleLogout = async () => {
     try {
+      setHistory([]);
+      setIsZenMode(false);
       await signOut(auth);
     } catch (e) {
       console.error('Logout error:', e);
@@ -387,7 +399,13 @@ export default function App() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setIsZenMode(!isZenMode)}
+              onClick={() => {
+                const newVal = !isZenMode;
+                setIsZenMode(newVal);
+                if (user) {
+                  localStorage.setItem(`swifttype_zen_mode_${user.uid}`, newVal.toString());
+                }
+              }}
               className={cn(
                 "p-2 transition-colors",
                 isZenMode ? "text-accent-green" : "text-text-dim hover:text-text-main"
@@ -617,7 +635,7 @@ export default function App() {
                    </div>
                  </div>
 
-                 <DailyGoals history={history} />
+                 <DailyGoals history={history} userId={user?.uid} />
                  <HistoryChart history={history} />
                  <BadgeGrid unlockedIds={unlockedIds} />
                  <KeyboardHeatmap missedKeys={missedKeys} />
