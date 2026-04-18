@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { db, auth } from './firebase'; // This imports the file you just created
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { Login } from './components/Login';
 import { Signup } from './components/Signup';
@@ -93,15 +93,18 @@ export default function App() {
   const { unlockedIds, checkBadges } = useBadges();
 
   const saveUserStats = async (wpm: number, accuracy: number) => {
-    try {
-      await addDoc(collection(db, 'user_stats'), {
-        wpm,
-        accuracy,
-        timestamp: new Date()
-      });
-      console.log('Stats saved successfully');
-    } catch (e) {
-      console.error('Error saving stats:', e);
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          wpm,
+          accuracy,
+          lastUpdated: new Date()
+        });
+        console.log('Stats saved successfully');
+      } catch (e) {
+        console.error('Error saving stats:', e);
+      }
     }
   };
 
