@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { auth } from '../firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { toast } from 'react-hot-toast';
-import { UserPlus, Mail, Lock, ArrowRight } from 'lucide-react';
+import { UserPlus, Mail, Lock, ArrowRight, User } from 'lucide-react';
 
 interface SignupProps {
   onSwitchToLogin: () => void;
@@ -10,6 +10,7 @@ interface SignupProps {
 
 export const Signup: React.FC<SignupProps> = ({ onSwitchToLogin }) => {
   const [email, setEmail] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,7 +23,8 @@ export const Signup: React.FC<SignupProps> = ({ onSwitchToLogin }) => {
     }
     setLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(userCredential.user, { displayName });
       toast.success('Account created successfully!');
     } catch (error: any) {
       toast.error(error.message || 'Failed to create account');
@@ -43,6 +45,21 @@ export const Signup: React.FC<SignupProps> = ({ onSwitchToLogin }) => {
         </div>
 
         <form onSubmit={handleSignup} className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold text-text-dim uppercase tracking-wider ml-1">Full Name</label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" size={18} />
+              <input
+                type="text"
+                required
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                className="w-full bg-bg border border-border-theme rounded-xl py-3 pl-10 pr-4 text-text-main focus:border-accent-blue outline-none transition-colors"
+                placeholder="Typing Master"
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
             <label className="text-[11px] font-bold text-text-dim uppercase tracking-wider ml-1">Email Address</label>
             <div className="relative">

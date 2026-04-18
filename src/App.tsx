@@ -42,7 +42,7 @@ import { useAdaptiveDifficulty } from './hooks/useAdaptiveDifficulty';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
-  const [authView, setAuthView] = useState<'login' | 'signup'>('login');
+  const [authView, setAuthView] = useState<'login' | 'signup'>('signup');
   const [isAuthChecking, setIsAuthChecking] = useState(true);
 
   useEffect(() => {
@@ -50,7 +50,16 @@ export default function App() {
       setUser(currentUser);
       setIsAuthChecking(false);
     });
-    return () => unsubscribe();
+
+    // Fallback to ensure we don't get stuck in auth checking state
+    const timer = setTimeout(() => {
+      setIsAuthChecking(false);
+    }, 3000);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
   // Persistence
@@ -436,7 +445,7 @@ export default function App() {
             <div className="flex items-center gap-2 px-3 py-1.5 bg-surface border border-border-theme rounded-lg">
               <UserIcon size={14} className="text-text-dim" />
               <span className="text-[11px] font-bold text-text-main truncate max-w-[100px]">
-                {user.email?.split('@')[0]}
+                {user.displayName || user.email?.split('@')[0]}
               </span>
             </div>
             <button
