@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { auth } from '../firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { isLoggingInRef } from '../App';
 import { toast } from 'react-hot-toast';
 import { UserPlus, Mail, Lock, ArrowRight, User } from 'lucide-react';
 
@@ -23,6 +24,7 @@ export const Signup: React.FC<SignupProps> = ({ onSwitchToLogin }) => {
     }
     setLoading(true);
     try {
+      isLoggingInRef.current = true;
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName });
       toast.success('Account created successfully!');
