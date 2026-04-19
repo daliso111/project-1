@@ -21,7 +21,7 @@ import {
   Volume2,
   VolumeX,
   Palette,
- LogOut,
+  LogOut,
   User as UserIcon,
   Leaf
 } from 'lucide-react';
@@ -41,7 +41,6 @@ import { useTheme } from './contexts/ThemeContext';
 import { THEMES } from './themes';
 import { useSounds } from './hooks/useSounds';
 import { useAdaptiveDifficulty } from './hooks/useAdaptiveDifficulty';
-import { Analytics } from '@vercel/analytics/react';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -89,32 +88,7 @@ export default function App() {
   const [selectedLanguage, setSelectedLanguage] = useState('All');
   const [customText, setCustomText] = useState('');
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
-  const [isZenMode, setIsZenMode] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      const storedHistory = localStorage.getItem(`swifttype_history_${user.uid}`);
-      if (storedHistory) {
-        try {
-          const parsed: SessionResult[] = JSON.parse(storedHistory);
-          setHistory(parsed.map(s => ({
-            ...s,
-            accuracy: Math.min(100, s.accuracy)
-          })));
-        } catch (e) {
-          setHistory([]);
-        }
-      } else {
-        setHistory([]);
-      }
-
-      const storedZen = localStorage.getItem(`swifttype_zen_mode_${user.uid}`);
-      setIsZenMode(storedZen === 'true');
-    } else {
-      setHistory([]);
-      setIsZenMode(false);
-    }
-  }, [user]);
 
   const { streak, updateStreak } = useStreak(user?.uid);
   const { unlockedIds, checkBadges } = useBadges(user?.uid);
@@ -399,23 +373,7 @@ export default function App() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => {
-                const newVal = !isZenMode;
-                setIsZenMode(newVal);
-                if (user) {
-                  localStorage.setItem(`swifttype_zen_mode_${user.uid}`, newVal.toString());
-                }
-              }}
-              className={cn(
-                "p-2 transition-colors",
-                isZenMode ? "text-accent-green" : "text-text-dim hover:text-text-main"
-              )}
-              title={isZenMode ? "Disable Zen Mode" : "Enable Zen Mode"}
-            >
-              <Leaf size={18} fill={isZenMode ? "currentColor" : "none"} fillOpacity={0.2} />
-            </button>
 
-            <button
               onClick={() => setIsMuted(!isMuted)}
               className="p-2 text-text-dim hover:text-text-main transition-colors"
               title={isMuted ? "Unmute" : "Mute"}
@@ -504,33 +462,24 @@ export default function App() {
         {activeTab === 'practice' ? (
           <div className="space-y-6">
             {/* Stats Row */}
-            <AnimatePresence>
-              {!(isZenMode && isStarted && !isFinished) && (
-                <motion.div
-                  initial={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0, marginBottom: 0, overflow: 'hidden' }}
-                  transition={{ duration: 0.3 }}
-                  className="grid grid-cols-4 gap-6"
-                >
-                  <div className="stat-card">
-                    <div className="text-[11px] font-bold text-text-dim uppercase tracking-[0.1em] mb-2">WPM</div>
-                    <div className="text-3xl font-bold font-mono text-accent-green">{wpm}</div>
-                  </div>
-                  <div className="stat-card">
-                    <div className="text-[11px] font-bold text-text-dim uppercase tracking-[0.1em] mb-2">Accuracy</div>
-                    <div className="text-3xl font-bold font-mono">{accuracy}%</div>
-                  </div>
-                  <div className="stat-card">
-                    <div className="text-[11px] font-bold text-text-dim uppercase tracking-[0.1em] mb-2">Timer</div>
-                    <div className="text-3xl font-bold font-mono">{formatTime(timeLeft)}</div>
-                  </div>
-                  <div className="stat-card">
-                    <div className="text-[11px] font-bold text-text-dim uppercase tracking-[0.1em] mb-2">Errors</div>
-                    <div className="text-3xl font-bold font-mono text-accent-red">{errors}</div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <div className="grid grid-cols-4 gap-6">
+              <div className="stat-card">
+                <div className="text-[11px] font-bold text-text-dim uppercase tracking-[0.1em] mb-2">WPM</div>
+                <div className="text-3xl font-bold font-mono text-accent-green">{wpm}</div>
+              </div>
+              <div className="stat-card">
+                <div className="text-[11px] font-bold text-text-dim uppercase tracking-[0.1em] mb-2">Accuracy</div>
+                <div className="text-3xl font-bold font-mono">{accuracy}%</div>
+              </div>
+              <div className="stat-card">
+                <div className="text-[11px] font-bold text-text-dim uppercase tracking-[0.1em] mb-2">Timer</div>
+                <div className="text-3xl font-bold font-mono">{formatTime(timeLeft)}</div>
+              </div>
+              <div className="stat-card">
+                <div className="text-[11px] font-bold text-text-dim uppercase tracking-[0.1em] mb-2">Errors</div>
+                <div className="text-3xl font-bold font-mono text-accent-red">{errors}</div>
+              </div>
+            </div>
 
             {/* Typing Canvas */}
             <div 
@@ -588,24 +537,15 @@ export default function App() {
             </div>
 
             {/* Action Bar */}
-            <AnimatePresence>
-              {!(isZenMode && isStarted && !isFinished) && (
-                <motion.div
-                  initial={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0, marginTop: 0, overflow: 'hidden' }}
-                  transition={{ duration: 0.3 }}
-                  className="flex justify-center pt-4"
-                >
-                  <button
-                    onClick={reset}
-                    className="btn-toggle flex items-center gap-2 px-8 py-3 !text-text-main hover:border-accent-blue/50"
-                  >
-                    <RotateCcw size={16} />
-                    Reset (Tab)
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <div className="flex justify-center pt-4">
+              <button
+                onClick={reset}
+                className="btn-toggle flex items-center gap-2 px-8 py-3 !text-text-main hover:border-accent-blue/50"
+              >
+                <RotateCcw size={16} />
+                Reset (Tab)
+              </button>
+            </div>
           </div>
         ) : (
           /* Stats Tab */
@@ -800,7 +740,6 @@ export default function App() {
           geometric balance &middot; typeflow precision
         </p>
       </footer>
-      <Analytics />
     </div>
   );
 }
