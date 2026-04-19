@@ -47,6 +47,10 @@ export default function App() {
   const [isProfilePending, setIsProfilePending] = useState(false);
   const [authView, setAuthView] = useState<'login' | 'signup'>('signup');
   const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [isZenMode, setIsZenMode] = useState(false);
+
+  const inputRef = useRef<HTMLInputElement>(null);
+  const isLoggingOut = useRef(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -133,9 +137,6 @@ export default function App() {
     timeElapsed
   } = useTypingEngine(mode, effectiveDifficulty, timeLimit, selectedLanguage, punctMode, customText);
 
-  const inputRef = useRef<HTMLInputElement>(null);
-  const isLoggingOut = useRef(false);
-
   useEffect(() => {
     if (isFinished) {
       playComplete();
@@ -217,6 +218,10 @@ export default function App() {
       setHistory([]);
       setIsZenMode(false);
       await signOut(auth);
+      // Explicitly clear local state in case the observer doesn't fire (e.g., if already signed out)
+      setUser(null);
+      setIsProfilePending(false);
+      isLoggingOut.current = false;
     } catch (e) {
       console.error('Logout error:', e);
       isLoggingOut.current = false;
