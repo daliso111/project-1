@@ -42,6 +42,8 @@ import { THEMES } from './themes';
 import { useSounds } from './hooks/useSounds';
 import { useAdaptiveDifficulty } from './hooks/useAdaptiveDifficulty';
 
+export const isLoggingInRef = { current: false };
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isProfilePending, setIsProfilePending] = useState(false);
@@ -51,12 +53,16 @@ export default function App() {
 
   const inputRef = useRef<HTMLInputElement>(null);
   const isLoggingOut = useRef(false);
+  const isInitialLoad = useRef(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        setUser(currentUser);
-        setIsProfilePending(!currentUser.displayName);
+        if (isLoggingInRef.current || isInitialLoad.current) {
+          setUser(currentUser);
+          setIsProfilePending(!currentUser.displayName);
+          isLoggingInRef.current = false;
+        }
       } else {
         if (isLoggingOut.current) {
           setUser(null);
@@ -65,6 +71,7 @@ export default function App() {
         }
       }
       setIsAuthChecking(false);
+      isInitialLoad.current = false;
     });
 
     // Fallback to ensure we don't get stuck in auth checking state

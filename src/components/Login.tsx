@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { auth } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { isLoggingInRef } from '../App';
 import { toast } from 'react-hot-toast';
 import { LogIn, Mail, Lock, ArrowRight } from 'lucide-react';
 
@@ -17,6 +18,7 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToSignup }) => {
     e.preventDefault();
     setLoading(true);
     try {
+      isLoggingInRef.current = true;
       await signInWithEmailAndPassword(auth, email, password);
       toast.success('Successfully logged in!');
     } catch (error: any) {
