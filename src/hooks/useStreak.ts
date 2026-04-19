@@ -5,13 +5,32 @@ interface StreakData {
   currentStreak: number;
 }
 
-export function useStreak() {
-  const [streakData, setStreakData] = useState<StreakData>(() => {
-    const stored = localStorage.getItem('swifttype_streak');
-    return stored ? JSON.parse(stored) : { lastPracticeDate: null, currentStreak: 0 };
-  });
+const DEFAULT_STREAK: StreakData = { lastPracticeDate: null, currentStreak: 0 };
+
+export function useStreak(userId?: string) {
+  const [streakData, setStreakData] = useState<StreakData>(DEFAULT_STREAK);
+
+  useEffect(() => {
+    if (!userId) {
+      setStreakData(DEFAULT_STREAK);
+      return;
+    }
+
+    const stored = localStorage.getItem(`swifttype_streak_${userId}`);
+    if (stored) {
+      try {
+        setStreakData(JSON.parse(stored));
+      } catch (e) {
+        setStreakData(DEFAULT_STREAK);
+      }
+    } else {
+      setStreakData(DEFAULT_STREAK);
+    }
+  }, [userId]);
 
   const updateStreak = useCallback(() => {
+    if (!userId) return;
+
     const today = new Date().toDateString();
     
     setStreakData(prev => {
@@ -35,10 +54,10 @@ export function useStreak() {
       }
 
       const newData = { lastPracticeDate: today, currentStreak: newStreak };
-      localStorage.setItem('swifttype_streak', JSON.stringify(newData));
+      localStorage.setItem(`swifttype_streak_${userId}`, JSON.stringify(newData));
       return newData;
     });
-  }, []);
+  }, [userId]);
 
   return { streak: streakData.currentStreak, updateStreak };
 }

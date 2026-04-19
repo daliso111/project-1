@@ -4,13 +4,30 @@ import { SessionResult } from '../constants';
 
 interface DailyGoalsProps {
   history: SessionResult[];
+  userId?: string;
 }
 
-export function DailyGoals({ history }: DailyGoalsProps) {
+export function DailyGoals({ history, userId }: DailyGoalsProps) {
   const [goals, setGoals] = useState({
-    targetWpm: Number(localStorage.getItem('swifttype_goal_wpm')) || 50,
-    targetSessions: Number(localStorage.getItem('swifttype_goal_sessions')) || 5
+    targetWpm: 50,
+    targetSessions: 5
   });
+
+  useEffect(() => {
+    if (userId) {
+      const storedWpm = localStorage.getItem(`swifttype_goal_wpm_${userId}`);
+      const storedSessions = localStorage.getItem(`swifttype_goal_sessions_${userId}`);
+      setGoals({
+        targetWpm: Number(storedWpm) || 50,
+        targetSessions: Number(storedSessions) || 5
+      });
+    } else {
+      setGoals({
+        targetWpm: 50,
+        targetSessions: 5
+      });
+    }
+  }, [userId]);
 
   const today = new Date().toDateString();
   const sessionsToday = history.filter(s => new Date(s.date).toDateString() === today);
@@ -20,10 +37,11 @@ export function DailyGoals({ history }: DailyGoalsProps) {
   const sessionProgress = Math.min(100, Math.round((sessionsToday.length / goals.targetSessions) * 100));
 
   const updateGoal = (key: 'targetWpm' | 'targetSessions', value: string) => {
+    if (!userId) return;
     const num = parseInt(value) || 0;
     const newGoals = { ...goals, [key]: num };
     setGoals(newGoals);
-    localStorage.setItem(`swifttype_goal_${key === 'targetWpm' ? 'wpm' : 'sessions'}`, num.toString());
+    localStorage.setItem(`swifttype_goal_${key === 'targetWpm' ? 'wpm' : 'sessions'}_${userId}`, num.toString());
   };
 
   return (

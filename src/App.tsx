@@ -67,20 +67,7 @@ export default function App() {
   }, []);
 
   // Persistence
-  const [history, setHistory] = useState<SessionResult[]>(() => {
-    const stored = localStorage.getItem('swifttype_history');
-    if (!stored) return [];
-    try {
-      const parsed: SessionResult[] = JSON.parse(stored);
-      // Clean up bugged accuracies and ensure all fields are correct
-      return parsed.map(s => ({
-        ...s,
-        accuracy: Math.min(100, s.accuracy)
-      }));
-    } catch (e) {
-      return [];
-    }
-  });
+  const [history, setHistory] = useState<SessionResult[]>([]);
 
   const { theme, setTheme } = useTheme();
   const { isMuted, setIsMuted, playCorrect, playError, playComplete } = useSounds();
@@ -102,8 +89,9 @@ export default function App() {
   const [customText, setCustomText] = useState('');
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
 
-  const { streak, updateStreak } = useStreak();
-  const { unlockedIds, checkBadges } = useBadges();
+
+  const { streak, updateStreak } = useStreak(user?.uid);
+  const { unlockedIds, checkBadges } = useBadges(user?.uid);
 
   const saveUserStats = async (wpm: number, accuracy: number) => {
     const user = auth.currentUser;
@@ -155,7 +143,9 @@ export default function App() {
       };
       const newHistory = [...history, result];
       setHistory(newHistory);
-      localStorage.setItem('swifttype_history', JSON.stringify(newHistory));
+      if (user) {
+        localStorage.setItem(`swifttype_history_${user.uid}`, JSON.stringify(newHistory));
+      }
       
       // Update streak and check achievements
       updateStreak();
@@ -214,6 +204,8 @@ export default function App() {
 
   const handleLogout = async () => {
     try {
+      setHistory([]);
+      setIsZenMode(false);
       await signOut(auth);
     } catch (e) {
       console.error('Logout error:', e);
@@ -381,6 +373,7 @@ export default function App() {
 
           <div className="flex items-center gap-2">
             <button
+
               onClick={() => setIsMuted(!isMuted)}
               className="p-2 text-text-dim hover:text-text-main transition-colors"
               title={isMuted ? "Unmute" : "Mute"}
@@ -582,7 +575,7 @@ export default function App() {
                    </div>
                  </div>
 
-                 <DailyGoals history={history} />
+                 <DailyGoals history={history} userId={user?.uid} />
                  <HistoryChart history={history} />
                  <BadgeGrid unlockedIds={unlockedIds} />
                  <KeyboardHeatmap missedKeys={missedKeys} />
