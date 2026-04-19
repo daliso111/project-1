@@ -51,8 +51,17 @@ export default function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setIsProfilePending(!!currentUser && !currentUser.displayName);
+      if (currentUser) {
+        setUser(currentUser);
+        setIsProfilePending(!!currentUser && !currentUser.displayName);
+      } else {
+        if (isLoggingOut.current) {
+          setUser(null);
+          setIsProfilePending(false);
+          isLoggingOut.current = false;
+        }
+        // Logout was triggered in another tab — ignore it and stay logged in
+      }
       setIsAuthChecking(false);
     });
 
@@ -152,6 +161,7 @@ export default function App() {
   } = useTypingEngine(mode, effectiveDifficulty, timeLimit, selectedLanguage, punctMode, customText);
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const isLoggingOut = useRef(false);
 
   useEffect(() => {
     if (isFinished) {
@@ -230,11 +240,13 @@ export default function App() {
 
   const handleLogout = async () => {
     try {
+      isLoggingOut.current = true;
       setHistory([]);
       setIsZenMode(false);
       await signOut(auth);
     } catch (e) {
       console.error('Logout error:', e);
+      isLoggingOut.current = false;
     }
   };
 
