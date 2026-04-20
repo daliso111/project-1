@@ -44,7 +44,7 @@ import { useAdaptiveDifficulty } from './hooks/useAdaptiveDifficulty';
 import { getLessons, Lesson, LessonKey } from './services/lessonService';
 import { LessonCard } from './components/LessonCard';
 import { LearningPath } from './components/LearningPath';
-import { getUserProgress, updateLevelProgress, UserProgress, DifficultyKey } from './services/progressService';
+import { getUserProgress, updateLevelProgress, completeExercise, EXERCISES_PER_LESSON, UserProgress, DifficultyKey } from './services/progressService';
 
 export const isLoggingInRef = { current: false };
 
@@ -115,6 +115,12 @@ export default function App() {
   const [lessonsLoading, setLessonsLoading] = useState(true);
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [progressLoading, setProgressLoading] = useState(true);
+  const [activeLesson, setActiveLesson] = useState<{
+    difficulty: DifficultyKey;
+    level: 'level1' | 'level2' | 'level3';
+    lessonNum: number;
+  } | null>(null);
+  const [showLessonComplete, setShowLessonComplete] = useState(false);
 
 
   const { streak, updateStreak } = useStreak(user?.uid);
@@ -187,6 +193,22 @@ export default function App() {
 
       // Save stats to Firestore
       saveUserStats(wpm, accuracy);
+
+      // Update lesson progress if in a structured lesson
+      if (activeLesson && user) {
+        completeExercise(
+          user.uid,
+          activeLesson.difficulty,
+          activeLesson.level,
+          activeLesson.lessonNum
+        ).then(({ lessonCompleted, allLessonsCompleted }) => {
+          // Refresh progress
+          getUserProgress(user.uid).then(setUserProgress);
+          if (lessonCompleted) {
+            setShowLessonComplete(true);
+          }
+        }).catch(console.error);
+      }
     }
   }, [isFinished]);
 
@@ -257,6 +279,7 @@ export default function App() {
   };
 
   const handleStartLesson = (difficulty: DifficultyKey, level: 'level1' | 'level2' | 'level3', lesson: number) => {
+    setActiveLesson({ difficulty, level, lessonNum: lesson });
     setActiveTab('practice');
     setDifficulty(difficulty.charAt(0).toUpperCase() + difficulty.slice(1) as any);
   };
