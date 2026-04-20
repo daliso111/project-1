@@ -43,6 +43,8 @@ import { useSounds } from './hooks/useSounds';
 import { useAdaptiveDifficulty } from './hooks/useAdaptiveDifficulty';
 import { getLessons, Lesson, LessonKey } from './services/lessonService';
 import { LessonCard } from './components/LessonCard';
+import { LearningPath } from './components/LearningPath';
+import { getUserProgress, updateLevelProgress, UserProgress, DifficultyKey } from './services/progressService';
 
 export const isLoggingInRef = { current: false };
 
@@ -111,6 +113,8 @@ export default function App() {
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
   const [lessons, setLessons] = useState<Record<LessonKey, Lesson> | null>(null);
   const [lessonsLoading, setLessonsLoading] = useState(true);
+  const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
+  const [progressLoading, setProgressLoading] = useState(true);
 
 
   const { streak, updateStreak } = useStreak(user?.uid);
@@ -194,6 +198,12 @@ export default function App() {
         .then(setLessons)
         .catch(console.error)
         .finally(() => setLessonsLoading(false));
+
+      setProgressLoading(true);
+      getUserProgress(currentUser.uid)
+        .then(setUserProgress)
+        .catch(console.error)
+        .finally(() => setProgressLoading(false));
     } else if (user) {
       setLessonsLoading(true);
       getLessons()
@@ -238,6 +248,16 @@ export default function App() {
 
   const focusInput = () => {
     inputRef.current?.focus();
+  };
+
+  const handleStartLesson = (difficulty: DifficultyKey, level: 'level1' | 'level2' | 'level3', lesson: number) => {
+    setActiveTab('practice');
+    setDifficulty(difficulty.charAt(0).toUpperCase() + difficulty.slice(1) as any);
+  };
+
+  const handleStartTest = (difficulty: DifficultyKey, level: 'level1' | 'level2' | 'level3') => {
+    setActiveTab('practice');
+    setDifficulty(difficulty.charAt(0).toUpperCase() + difficulty.slice(1) as any);
   };
 
   const handleLogout = async () => {
@@ -515,9 +535,12 @@ export default function App() {
 
       <main className="container mx-auto max-w-[900px] pt-40 pb-20 px-6">
         {activeTab === 'learn' ? (
-          <div className="flex items-center justify-center h-64">
-            <p className="text-text-dim text-[14px] font-medium">Learning path coming soon...</p>
-          </div>
+          <LearningPath
+            progress={userProgress}
+            isLoading={progressLoading}
+            onStartLesson={handleStartLesson}
+            onStartTest={handleStartTest}
+          />
         ) : activeTab === 'practice' ? (
           <div className="space-y-6">
             <LessonCard
