@@ -5,6 +5,7 @@ export type DifficultyKey = 'beginner' | 'intermediate' | 'advanced';
 
 export interface LevelProgress {
   lessonsCompleted: number;
+  lessonExercises: Record<number, number>; // lesson number -> exercises completed (0-3)
   testPassed: boolean;
   testWpm: number;
   testAccuracy: number;
@@ -30,9 +31,54 @@ export interface UserProgress {
 
 export const DEFAULT_LEVEL_PROGRESS: LevelProgress = {
   lessonsCompleted: 0,
+  lessonExercises: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
   testPassed: false,
   testWpm: 0,
   testAccuracy: 0
+};
+
+export const EXERCISES_PER_LESSON = 3;
+
+export const completeExercise = async (
+  userId: string,
+  difficulty: DifficultyKey,
+  level: 'level1' | 'level2' | 'level3',
+  lessonNum: number
+): Promise<{ lessonCompleted: boolean; allLessonsCompleted: boolean }> => {
+  const docRef = doc(db, 'progress', userId);
+  const docSnap = await getDoc(docRef);
+  const current = docSnap.exists() ? docSnap.data() as UserProgress : DEFAULT_PROGRESS;
+
+  const levelProgress = current[difficulty][level];
+  const currentExercises = levelProgress.lessonExercises?.[lessonNum] ?? 0;
+  const newExercises = Math.min(currentExercises + 1, EXERCISES_PER_LESSON);
+  const lessonCompleted = newExercises >= EXERCISES_PER_LESSON;
+
+  const newLessonsCompleted = lessonCompleted && lessonNum > levelProgress.lessonsCompleted
+    ? lessonNum
+    : levelProgress.lessonsCompleted;
+
+  const updated = {
+    ...current,
+    [difficulty]: {
+      ...current[difficulty],
+      [level]: {
+        ...levelProgress,
+        lessonExercises: {
+          ...levelProgress.lessonExercises,
+          [lessonNum]: newExercises
+        },
+        lessonsCompleted: newLessonsCompleted
+      }
+    }
+  };
+
+  await setDoc(docRef, updated);
+
+  return {
+    lessonCompleted,
+    allLessonsCompleted: newLessonsCompleted >= 5
+  };
 };
 
 export const DEFAULT_PROGRESS: UserProgress = {
