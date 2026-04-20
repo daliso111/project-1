@@ -19,6 +19,44 @@ const DIFFICULTIES: { key: DifficultyKey; label: string; color: string; activeCl
 
 const LEVELS = ['level1', 'level2', 'level3'] as const;
 
+function ProgressRing({ exercises, total = 3, size = 64, color = '#3b82f6' }: {
+  exercises: number;
+  total?: number;
+  size?: number;
+  color?: string;
+}) {
+  const radius = (size - 8) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const progress = exercises / total;
+  const strokeDashoffset = circumference * (1 - progress);
+
+  return (
+    <svg width={size} height={size} className="absolute top-0 left-0 -rotate-90">
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="4"
+        className="text-border-theme"
+      />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke={color}
+        strokeWidth="4"
+        strokeDasharray={circumference}
+        strokeDashoffset={strokeDashoffset}
+        strokeLinecap="round"
+        className="transition-all duration-500"
+      />
+    </svg>
+  );
+}
+
 export function LearningPath({ progress, isLoading, onStartLesson, onStartTest }: LearningPathProps) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyKey>('beginner');
 
@@ -106,23 +144,39 @@ export function LearningPath({ progress, isLoading, onStartLesson, onStartTest }
                           disabled={!unlocked || (!completed && !isCurrent)}
                           onClick={() => onStartLesson(selectedDifficulty, level, lessonNum)}
                           className={cn(
-                            "w-16 h-16 rounded-full flex flex-col items-center justify-center transition-all border-4 relative",
-                            !unlocked && "border-border-theme bg-surface cursor-not-allowed opacity-40",
-                            unlocked && completed && "border-accent-green bg-accent-green/20 text-accent-green",
-                            unlocked && isCurrent && "border-accent-blue bg-accent-blue/20 text-accent-blue animate-pulse cursor-pointer",
-                            unlocked && !completed && !isCurrent && "border-border-theme bg-surface text-text-dim opacity-40 cursor-not-allowed"
+                            "w-16 h-16 rounded-full flex flex-col items-center justify-center transition-all relative",
+                            !unlocked && "cursor-not-allowed opacity-40",
+                            unlocked && completed && "bg-accent-green/20 text-accent-green",
+                            unlocked && isCurrent && "bg-accent-blue/20 text-accent-blue cursor-pointer",
+                            unlocked && !completed && !isCurrent && "bg-surface text-text-dim opacity-40 cursor-not-allowed"
                           )}
                         >
-                          {!unlocked ? (
-                            <Lock size={18} className="text-text-dim" />
-                          ) : completed ? (
-                            <CheckCircle size={18} className="text-accent-green" />
-                          ) : (
-                            <>
-                              <PlayCircle size={18} />
-                              <span className="text-[9px] font-black mt-0.5">{lessonNum}</span>
-                            </>
+                          {/* Progress ring */}
+                          {unlocked && !completed && (
+                            <ProgressRing
+                              exercises={levelProgress.lessonExercises?.[lessonNum] ?? 0}
+                              total={3}
+                              size={64}
+                              color={isCurrent ? '#3b82f6' : '#374151'}
+                            />
                           )}
+                          {unlocked && completed && (
+                            <ProgressRing exercises={3} total={3} size={64} color="#22c55e" />
+                          )}
+
+                          {/* Icon */}
+                          <div className="relative z-10 flex flex-col items-center">
+                            {!unlocked ? (
+                              <Lock size={18} className="text-text-dim" />
+                            ) : completed ? (
+                              <CheckCircle size={18} className="text-accent-green" />
+                            ) : (
+                              <>
+                                <PlayCircle size={18} />
+                                <span className="text-[9px] font-black mt-0.5">{lessonNum}</span>
+                              </>
+                            )}
+                          </div>
                         </button>
 
                         {/* Connecting line between nodes */}
