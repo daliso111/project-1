@@ -187,7 +187,14 @@ export default function App() {
   }, [isFinished]);
 
   useEffect(() => {
-    if (user) {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      setLessonsLoading(true);
+      getLessons()
+        .then(setLessons)
+        .catch(console.error)
+        .finally(() => setLessonsLoading(false));
+    } else if (user) {
       setLessonsLoading(true);
       getLessons()
         .then(setLessons)
