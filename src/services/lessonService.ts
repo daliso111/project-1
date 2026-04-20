@@ -37,6 +37,7 @@ export const getLessons = async (): Promise<Record<LessonKey, Lesson>> => {
   for (const key of LESSON_KEYS) {
     const docRef = doc(db, 'lessons', key);
     const docSnap = await getDoc(docRef);
+    console.log(`Fetching lesson for ${key}:`, docSnap.exists() ? docSnap.data() : 'NOT FOUND');
     if (docSnap.exists()) {
       lessons[key] = docSnap.data() as Lesson;
     } else {
