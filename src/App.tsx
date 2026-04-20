@@ -98,7 +98,7 @@ export default function App() {
   const [difficulty, setDifficulty] = useState<Difficulty>('Intermediate');
   const [mode, setMode] = useState<PracticeMode>('Time Attack');
   const [timeLimit, setTimeLimit] = useState<TimeLimit>(60);
-  const [activeTab, setActiveTab] = useState<'practice' | 'stats'>('practice');
+  const [activeTab, setActiveTab] = useState<'practice' | 'stats' | 'learn'>('learn');
 
   // Adaptive Difficulty logic
   const adaptedLevel = useAdaptiveDifficulty(history);
@@ -474,12 +474,23 @@ export default function App() {
 
           <div className="w-px h-6 bg-border-theme" />
 
-          <button 
-            onClick={() => setActiveTab(activeTab === 'practice' ? 'stats' : 'practice')}
-            className="text-text-dim hover:text-text-main transition-colors flex items-center gap-2"
+          <button
+            onClick={() => setActiveTab('learn')}
+            className={cn("btn-toggle", activeTab === 'learn' && "btn-toggle-active")}
           >
-            {activeTab === 'practice' ? <BarChart3 size={20} /> : <Layout size={20} />}
-            <span className="text-[13px] font-semibold hidden sm:inline">{activeTab === 'practice' ? 'Stats' : 'Practice'}</span>
+            Learn
+          </button>
+          <button
+            onClick={() => setActiveTab('practice')}
+            className={cn("btn-toggle", activeTab === 'practice' && "btn-toggle-active")}
+          >
+            Practice
+          </button>
+          <button
+            onClick={() => setActiveTab('stats')}
+            className={cn("btn-toggle", activeTab === 'stats' && "btn-toggle-active")}
+          >
+            Stats
           </button>
 
           <div className="w-px h-6 bg-border-theme" />
@@ -503,7 +514,11 @@ export default function App() {
       </header>
 
       <main className="container mx-auto max-w-[900px] pt-40 pb-20 px-6">
-        {activeTab === 'practice' ? (
+        {activeTab === 'learn' ? (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-text-dim text-[14px] font-medium">Learning path coming soon...</p>
+          </div>
+        ) : activeTab === 'practice' ? (
           <div className="space-y-6">
             <LessonCard
               lesson={lessons ? lessons[effectiveDifficulty.toLowerCase() as LessonKey] ?? null : null}
