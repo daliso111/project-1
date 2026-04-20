@@ -850,6 +850,41 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* Lesson Complete Modal */}
+      <AnimatePresence>
+        {showLessonComplete && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-bg/90 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="w-full max-w-sm bg-surface border border-border-theme rounded-2xl p-10 shadow-2xl text-center"
+            >
+              <motion.div
+                animate={{ rotate: [0, -10, 10, -10, 10, 0], scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.6 }}
+                className="text-6xl mb-6"
+              >
+                🎉
+              </motion.div>
+              <h2 className="text-2xl font-black text-text-main mb-2">Lesson Complete!</h2>
+              <p className="text-text-dim text-[13px] mb-8">
+                Great job! Keep going to unlock the next lesson.
+              </p>
+              <button
+                onClick={() => {
+                  setShowLessonComplete(false);
+                  setActiveTab('learn');
+                }}
+                className="w-full py-4 bg-accent-blue text-white rounded-xl font-bold uppercase tracking-widest hover:brightness-110 transition-all"
+              >
+                Continue
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <footer className="fixed bottom-0 w-full px-8 py-4 flex items-center justify-center pointer-events-none opacity-20">
         <p className="text-[9px] uppercase font-bold tracking-[0.4em] text-text-dim">
           geometric balance &middot; typeflow precision
