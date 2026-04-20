@@ -499,7 +499,7 @@ export default function App() {
         {activeTab === 'practice' ? (
           <div className="space-y-6">
             <LessonCard
-              lesson={lessons ? lessons[difficulty.toLowerCase() as LessonKey] : null}
+              lesson={lessons ? lessons[effectiveDifficulty.toLowerCase() as LessonKey] ?? null : null}
               isLoading={lessonsLoading}
             />
             {/* Stats Row */}
