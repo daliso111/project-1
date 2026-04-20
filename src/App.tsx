@@ -41,6 +41,8 @@ import { useTheme } from './contexts/ThemeContext';
 import { THEMES } from './themes';
 import { useSounds } from './hooks/useSounds';
 import { useAdaptiveDifficulty } from './hooks/useAdaptiveDifficulty';
+import { getLessons, Lesson, LessonKey } from './services/lessonService';
+import { LessonCard } from './components/LessonCard';
 
 export const isLoggingInRef = { current: false };
 
@@ -107,6 +109,8 @@ export default function App() {
   const [selectedLanguage, setSelectedLanguage] = useState('All');
   const [customText, setCustomText] = useState('');
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
+  const [lessons, setLessons] = useState<Record<LessonKey, Lesson> | null>(null);
+  const [lessonsLoading, setLessonsLoading] = useState(true);
 
 
   const { streak, updateStreak } = useStreak(user?.uid);
@@ -181,6 +185,16 @@ export default function App() {
       saveUserStats(wpm, accuracy);
     }
   }, [isFinished]);
+
+  useEffect(() => {
+    if (user) {
+      setLessonsLoading(true);
+      getLessons()
+        .then(setLessons)
+        .catch(console.error)
+        .finally(() => setLessonsLoading(false));
+    }
+  }, [user]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -484,6 +498,10 @@ export default function App() {
       <main className="container mx-auto max-w-[900px] pt-40 pb-20 px-6">
         {activeTab === 'practice' ? (
           <div className="space-y-6">
+            <LessonCard
+              lesson={lessons ? lessons[difficulty.toLowerCase() as LessonKey] : null}
+              isLoading={lessonsLoading}
+            />
             {/* Stats Row */}
             <div className="grid grid-cols-4 gap-6">
               <div className="stat-card">
