@@ -94,29 +94,45 @@ export function LearningPath({ progress, isLoading, onStartLesson, onStartTest }
                   ) : null}
                 </div>
 
-                {/* Lessons */}
-                <div className="space-y-2">
+                {/* Lessons as circular nodes */}
+                <div className="flex flex-col items-center gap-2">
                   {[1, 2, 3, 4, 5].map((lessonNum) => {
                     const completed = lessonNum <= levelProgress.lessonsCompleted;
+                    const isCurrent = lessonNum === levelProgress.lessonsCompleted + 1;
+
                     return (
-                      <button
-                        key={lessonNum}
-                        disabled={!unlocked}
-                        onClick={() => onStartLesson(selectedDifficulty, level, lessonNum)}
-                        className={cn(
-                          "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all",
-                          !unlocked && "cursor-not-allowed",
-                          unlocked && completed && "bg-accent-green/10 text-accent-green",
-                          unlocked && !completed && "hover:bg-bg text-text-dim hover:text-text-main"
+                      <div key={lessonNum} className="flex flex-col items-center">
+                        <button
+                          disabled={!unlocked || (!completed && !isCurrent)}
+                          onClick={() => onStartLesson(selectedDifficulty, level, lessonNum)}
+                          className={cn(
+                            "w-16 h-16 rounded-full flex flex-col items-center justify-center transition-all border-4 relative",
+                            !unlocked && "border-border-theme bg-surface cursor-not-allowed opacity-40",
+                            unlocked && completed && "border-accent-green bg-accent-green/20 text-accent-green",
+                            unlocked && isCurrent && "border-accent-blue bg-accent-blue/20 text-accent-blue animate-pulse cursor-pointer",
+                            unlocked && !completed && !isCurrent && "border-border-theme bg-surface text-text-dim opacity-40 cursor-not-allowed"
+                          )}
+                        >
+                          {!unlocked ? (
+                            <Lock size={18} className="text-text-dim" />
+                          ) : completed ? (
+                            <CheckCircle size={18} className="text-accent-green" />
+                          ) : (
+                            <>
+                              <PlayCircle size={18} />
+                              <span className="text-[9px] font-black mt-0.5">{lessonNum}</span>
+                            </>
+                          )}
+                        </button>
+
+                        {/* Connecting line between nodes */}
+                        {lessonNum < 5 && (
+                          <div className={cn(
+                            "w-0.5 h-4",
+                            completed ? "bg-accent-green" : "bg-border-theme"
+                          )} />
                         )}
-                      >
-                        {completed ? (
-                          <CheckCircle size={12} className="text-accent-green shrink-0" />
-                        ) : (
-                          <PlayCircle size={12} className="text-text-dim shrink-0" />
-                        )}
-                        <span className="text-[11px] font-bold">Lesson {lessonNum}</span>
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
