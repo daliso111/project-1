@@ -210,6 +210,12 @@ export default function App() {
         .then(setLessons)
         .catch(console.error)
         .finally(() => setLessonsLoading(false));
+
+      setProgressLoading(true);
+      getUserProgress(user.uid)
+        .then(setUserProgress)
+        .catch(console.error)
+        .finally(() => setProgressLoading(false));
     }
   }, [user]);
 
