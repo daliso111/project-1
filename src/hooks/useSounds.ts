@@ -5,12 +5,21 @@ export function useSounds() {
     const stored = localStorage.getItem('swifttype_muted');
     return stored === 'false' ? false : true; // Default to true if null or 'true'
   });
+
+  const [volume, setVolume] = useState(() => {
+    const stored = localStorage.getItem('swifttype_volume');
+    return stored ? parseFloat(stored) : 0.5;
+  });
   
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
     localStorage.setItem('swifttype_muted', String(isMuted));
   }, [isMuted]);
+
+  useEffect(() => {
+    localStorage.setItem('swifttype_volume', String(volume));
+  }, [volume]);
 
   const initAudio = () => {
     if (!audioCtxRef.current) {
@@ -32,15 +41,16 @@ export function useSounds() {
     osc.frequency.setValueAtTime(800, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.1);
 
-    gain.gain.setValueAtTime(0.1, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+    const v = Math.max(0.0001, volume);
+    gain.gain.setValueAtTime(0.1 * v, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01 * v, ctx.currentTime + 0.1);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
 
     osc.start();
     osc.stop(ctx.currentTime + 0.1);
-  }, [isMuted]);
+  }, [isMuted, volume]);
 
   const playError = useCallback(() => {
     if (isMuted) return;
@@ -52,15 +62,16 @@ export function useSounds() {
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(150, ctx.currentTime);
 
-    gain.gain.setValueAtTime(0.1, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+    const v = Math.max(0.0001, volume);
+    gain.gain.setValueAtTime(0.1 * v, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.01 * v, ctx.currentTime + 0.1);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
 
     osc.start();
     osc.stop(ctx.currentTime + 0.1);
-  }, [isMuted]);
+  }, [isMuted, volume]);
 
   const playComplete = useCallback(() => {
     if (isMuted) return;
@@ -70,10 +81,11 @@ export function useSounds() {
     const playTone = (freq: number, start: number, duration: number) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
+      const v = Math.max(0.0001, volume);
       osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
       gain.gain.setValueAtTime(0, ctx.currentTime + start);
-      gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + start + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + start + duration);
+      gain.gain.linearRampToValueAtTime(0.1 * v, ctx.currentTime + start + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01 * v, ctx.currentTime + start + duration);
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start(ctx.currentTime + start);
@@ -83,7 +95,7 @@ export function useSounds() {
     playTone(440, 0, 0.5); // A4
     playTone(554.37, 0.1, 0.5); // C#5
     playTone(659.25, 0.2, 0.6); // E5
-  }, [isMuted]);
+  }, [isMuted, volume]);
 
-  return { isMuted, setIsMuted, playCorrect, playError, playComplete };
+  return { isMuted, setIsMuted, volume, setVolume, playCorrect, playError, playComplete };
 }
