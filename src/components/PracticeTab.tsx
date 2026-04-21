@@ -125,7 +125,7 @@ export function PracticeTab({
       {/* Action Bar */}
       <div className="flex justify-center pt-4">
         <button
-          onClick={() => reset()}
+          onClick={() => reset(true)}
           className="btn-toggle flex items-center gap-2 px-8 py-3 !text-text-main hover:border-accent-blue/50"
         >
           <RotateCcw size={16} />
