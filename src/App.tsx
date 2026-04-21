@@ -15,6 +15,7 @@ import {
   Target, 
   AlertCircle, 
   ChevronRight,
+  ChevronDown,
   BarChart3,
   Flame,
   Layout,
@@ -93,8 +94,11 @@ export default function App() {
   const [history, setHistory] = useState<SessionResult[]>([]);
 
   const { theme, setTheme } = useTheme();
-  const { isMuted, setIsMuted, playCorrect, playError, playComplete } = useSounds();
+  const { isMuted, setIsMuted, volume, setVolume, playCorrect, playError, playComplete } = useSounds();
   const [showThemePicker, setShowThemePicker] = useState(false);
+  const [showSectionDropdown, setShowSectionDropdown] = useState(false);
+  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
+  const [showClassDropdown, setShowClassDropdown] = useState(false);
 
   // Settings
   const [difficulty, setDifficulty] = useState<Difficulty>('Intermediate');
@@ -344,85 +348,57 @@ export default function App() {
               <span className="text-[12px] font-black text-accent-red">{streak}</span>
             </div>
           )}
-          <div className="flex gap-2">
-             {(['Time Attack', 'Word Sprint', 'Code', 'Custom'] as PracticeMode[]).map((m) => (
-               <button
-                 key={m}
-                 disabled={isStarted || isFinished}
-                 onClick={() => {
-                   if (m === 'Custom') setIsCustomModalOpen(true);
-                   setMode(m);
-                 }}
-                 className={cn("btn-toggle", mode === m && "btn-toggle-active")}
-               >
-                 {m.split(' ')[0]}
-               </button>
-             ))}
+          <div className="relative">
+            <button
+              disabled={isStarted || isFinished}
+              onClick={() => setShowSectionDropdown(!showSectionDropdown)}
+              className={cn(
+                "btn-toggle flex items-center gap-2",
+                showSectionDropdown && "btn-toggle-active"
+              )}
+            >
+              Section
+              <ChevronDown size={14} className={cn("transition-transform", showSectionDropdown && "rotate-180")} />
+            </button>
+
+            <AnimatePresence>
+              {showSectionDropdown && (
+                <>
+                  <div className="fixed inset-0 z-[60]" onClick={() => setShowSectionDropdown(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute left-0 mt-2 p-2 bg-surface border border-border-theme rounded-xl shadow-xl z-[70] min-w-[140px]"
+                  >
+                    <div className="grid grid-cols-1 gap-1">
+                      {[
+                        { label: 'Word', mode: 'Word Sprint' },
+                        { label: 'Code', mode: 'Code' },
+                        { label: 'Custom', mode: 'Custom' }
+                      ].map((item) => (
+                        <button
+                          key={item.label}
+                          onClick={() => {
+                            if (item.mode === 'Custom') setIsCustomModalOpen(true);
+                            setMode(item.mode as PracticeMode);
+                            setShowSectionDropdown(false);
+                          }}
+                          className={cn(
+                            "flex items-center px-3 py-2 rounded-lg text-left transition-colors font-bold text-[11px] uppercase tracking-wider",
+                            mode === item.mode ? "bg-accent-blue/10 text-accent-blue" : "hover:bg-bg text-text-dim"
+                          )}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
           </div>
 
-          {mode === 'Time Attack' && (
-            <>
-              <div className="w-px h-6 bg-border-theme" />
-              <div className="flex gap-2">
-                 {([30, 60, 120] as TimeLimit[]).map((t) => (
-                   <button
-                     key={t}
-                     disabled={isStarted || isFinished}
-                     onClick={() => setTimeLimit(t)}
-                     className={cn(
-                       "px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider transition-all border",
-                       timeLimit === t 
-                         ? "bg-accent-blue/10 border-accent-blue text-accent-blue ring-1 ring-accent-blue/20" 
-                         : "bg-surface border-border-theme text-text-dim hover:text-text-main"
-                     )}
-                   >
-                     {t}s
-                   </button>
-                 ))}
-              </div>
-            </>
-          )}
-
-          <div className="w-px h-6 bg-border-theme" />
-
-          <div className="flex gap-2">
-             {(['Beginner', 'Intermediate', 'Advanced', 'Adaptive'] as Difficulty[]).map((d) => (
-               <button
-                 key={d}
-                 disabled={isStarted || isFinished}
-                 onClick={() => setDifficulty(d)}
-                 className={cn(
-                   "flex flex-col items-center justify-center px-3 py-1.5 rounded-md transition-all", 
-                   difficulty === d ? "bg-accent-blue text-white" : "text-text-dim hover:text-text-main"
-                 )}
-               >
-                 <span className="text-[11px] font-bold uppercase tracking-wider">{d[0]}</span>
-                 {d === 'Adaptive' && (
-                   <span className="text-[7px] font-bold opacity-60 uppercase leading-none mt-0.5">
-                     {adaptedLevel[0]}
-                   </span>
-                 )}
-               </button>
-             ))}
-          </div>
-
-          {(mode === 'Time Attack' || mode === 'Word Sprint') && (
-            <>
-              <div className="w-px h-6 bg-border-theme" />
-              <button
-                disabled={isStarted || isFinished}
-                onClick={() => setPunctMode(!punctMode)}
-                className={cn(
-                  "px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all border",
-                  punctMode 
-                    ? "bg-accent-green/20 border-accent-green text-accent-green" 
-                    : "bg-surface border-border-theme text-text-dim"
-                )}
-              >
-                #&!
-              </button>
-            </>
-          )}
 
           {mode === 'Code' && (
             <>
@@ -441,83 +417,141 @@ export default function App() {
             </>
           )}
 
-          <div className="flex items-center gap-2">
+          <div className="relative">
             <button
-
-              onClick={() => setIsMuted(!isMuted)}
-              className="p-2 text-text-dim hover:text-text-main transition-colors"
-              title={isMuted ? "Unmute" : "Mute"}
+              onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
+              className={cn(
+                "p-2 text-text-dim hover:text-text-main transition-colors",
+                showSettingsDropdown && "text-accent-blue"
+              )}
+              title="Settings"
             >
-              {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+              <Settings size={20} />
             </button>
 
-            <div className="relative">
-              <button
-                onClick={() => setShowThemePicker(!showThemePicker)}
-                className="p-2 text-text-dim hover:text-text-main transition-colors"
-                title="Change Theme"
-              >
-                <Palette size={18} />
-              </button>
-              
-              <AnimatePresence>
-                {showThemePicker && (
-                  <>
-                    <div 
-                      className="fixed inset-0 z-[60]" 
-                      onClick={() => setShowThemePicker(false)} 
-                    />
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-2 p-2 bg-surface border border-border-theme rounded-xl shadow-xl z-[70] min-w-[140px]"
-                    >
-                      <div className="grid grid-cols-1 gap-1">
-                        {THEMES.map((t) => (
+            <AnimatePresence>
+              {showSettingsDropdown && (
+                <>
+                  <div className="fixed inset-0 z-[60]" onClick={() => setShowSettingsDropdown(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 mt-2 p-4 bg-surface border border-border-theme rounded-xl shadow-xl z-[70] min-w-[200px]"
+                  >
+                    <div className="space-y-4">
+                      {/* Volume Control */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-text-dim">
+                            {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Volume</span>
+                          </div>
                           <button
-                            key={t.id}
-                            onClick={() => {
-                              setTheme(t);
-                              setShowThemePicker(false);
-                            }}
-                            className={cn(
-                              "flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors",
-                              theme.id === t.id ? "bg-accent-blue/10 text-accent-blue" : "hover:bg-bg text-text-dim"
-                            )}
+                            onClick={() => setIsMuted(!isMuted)}
+                            className="text-[10px] font-bold text-accent-blue hover:underline"
                           >
-                            <div className="w-3 h-3 rounded-full border border-white/20" style={{ backgroundColor: t.colors.accentBlue }} />
-                            <span className="text-[11px] font-bold uppercase tracking-wider">{t.name}</span>
+                            {isMuted ? 'Unmute' : 'Mute'}
                           </button>
-                        ))}
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          value={volume}
+                          onChange={(e) => setVolume(parseFloat(e.target.value))}
+                          className="w-full h-1.5 bg-bg rounded-lg appearance-none cursor-pointer accent-accent-blue"
+                        />
                       </div>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
+
+                      <div className="h-px bg-border-theme" />
+
+                      {/* Theme Selector */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-text-dim">
+                          <Palette size={14} />
+                          <span className="text-[10px] font-bold uppercase tracking-wider">Theme</span>
+                        </div>
+                        <div className="flex gap-3 pt-1">
+                          {['dark', 'light', 'ocean'].map((themeId) => {
+                            const t = THEMES.find(t => t.id === themeId);
+                            if (!t) return null;
+                            return (
+                              <button
+                                key={t.id}
+                                onClick={() => {
+                                  setTheme(t);
+                                }}
+                                className={cn(
+                                  "w-6 h-6 rounded-full border-2 transition-transform hover:scale-110",
+                                  theme.id === t.id ? "border-accent-blue scale-110" : "border-white/10"
+                                )}
+                                style={{ backgroundColor: t.colors.accentBlue }}
+                                title={t.name}
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
           </div>
 
           <div className="w-px h-6 bg-border-theme" />
 
-          <button
-            onClick={() => setActiveTab('learn')}
-            className={cn("btn-toggle", activeTab === 'learn' && "btn-toggle-active")}
-          >
-            Learn
-          </button>
-          <button
-            onClick={() => setActiveTab('practice')}
-            className={cn("btn-toggle", activeTab === 'practice' && "btn-toggle-active")}
-          >
-            Practice
-          </button>
-          <button
-            onClick={() => setActiveTab('stats')}
-            className={cn("btn-toggle", activeTab === 'stats' && "btn-toggle-active")}
-          >
-            Stats
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowClassDropdown(!showClassDropdown)}
+              className={cn(
+                "btn-toggle flex items-center gap-2",
+                showClassDropdown && "btn-toggle-active"
+              )}
+            >
+              Class
+              <ChevronDown size={14} className={cn("transition-transform", showClassDropdown && "rotate-180")} />
+            </button>
+
+            <AnimatePresence>
+              {showClassDropdown && (
+                <>
+                  <div className="fixed inset-0 z-[60]" onClick={() => setShowClassDropdown(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 mt-2 p-2 bg-surface border border-border-theme rounded-xl shadow-xl z-[70] min-w-[140px]"
+                  >
+                    <div className="grid grid-cols-1 gap-1">
+                      {[
+                        { label: 'Learn', tab: 'learn', icon: UserIcon },
+                        { label: 'Practice', tab: 'practice', icon: Layout },
+                        { label: 'Stats', tab: 'stats', icon: BarChart3 }
+                      ].map((item) => (
+                        <button
+                          key={item.tab}
+                          onClick={() => {
+                            setActiveTab(item.tab as any);
+                            setShowClassDropdown(false);
+                          }}
+                          className={cn(
+                            "flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors font-bold text-[11px] uppercase tracking-wider",
+                            activeTab === item.tab ? "bg-accent-blue/10 text-accent-blue" : "hover:bg-bg text-text-dim"
+                          )}
+                        >
+                          <item.icon size={14} />
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
 
           <div className="w-px h-6 bg-border-theme" />
 
