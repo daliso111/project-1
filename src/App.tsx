@@ -45,7 +45,7 @@ import { useAdaptiveDifficulty } from './hooks/useAdaptiveDifficulty';
 import { getLessons, Lesson, LessonKey } from './services/lessonService';
 import { LessonCard } from './components/LessonCard';
 import { LearningPath } from './components/LearningPath';
-import { getUserProgress, updateLevelProgress, UserProgress, DifficultyKey } from './services/progressService';
+import { getUserProgress, updateLevelProgress, UserProgress, DifficultyKey, completeExercise } from './services/progressService';
 import { getLessonText } from './services/contentService';
 
 export const isLoggingInRef = { current: false };
@@ -132,6 +132,7 @@ export default function App() {
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [progressLoading, setProgressLoading] = useState(true);
   const [lessonsLoading, setLessonsLoading] = useState(true);
+  const [showLessonComplete, setShowLessonComplete] = useState(false);
 
 
   const { streak, updateStreak } = useStreak(user?.uid);
@@ -204,6 +205,35 @@ export default function App() {
 
       // Save stats to Firestore
       saveUserStats(wpm, accuracy);
+
+      if (activeLesson && user) {
+        completeExercise(
+          user.uid,
+          activeLesson.difficulty,
+          activeLesson.level,
+          activeLesson.lessonNum
+        ).then(({ lessonCompleted, allLessonsCompleted }) => {
+          getUserProgress(user.uid).then(setUserProgress);
+          if (lessonCompleted) {
+            setShowLessonComplete(true);
+            setActiveLesson(null);
+          } else {
+            // Fetch next exercise text
+            const currentProgress = userProgress?.[activeLesson.difficulty]?.[activeLesson.level];
+            const nextExercise = (currentProgress?.lessonExercises?.[activeLesson.lessonNum] ?? 0) + 1;
+            getLessonText(
+              activeLesson.difficulty,
+              activeLesson.level,
+              activeLesson.lessonNum,
+              Math.min(nextExercise, 3)
+            ).then((text) => {
+              if (text) {
+                setCustomText(text);
+              }
+            });
+          }
+        }).catch(console.error);
+      }
     }
   }, [isFinished]);
 
@@ -287,7 +317,7 @@ export default function App() {
         if (text) {
           setLessonText(text);
           setCustomText(text);
-          setMode('Custom');
+          setMode('Word Sprint');
         }
       })
       .catch(console.error);
@@ -774,6 +804,36 @@ export default function App() {
       />
 
       <Toaster />
+
+      {/* Lesson Complete Modal */}
+      <AnimatePresence>
+        {showLessonComplete && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-bg/95 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-full max-w-md bg-surface border border-border-theme rounded-3xl p-10 text-center shadow-2xl"
+            >
+              <div className="w-20 h-20 bg-accent-green/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Trophy size={40} className="text-accent-green" />
+              </div>
+              <h2 className="text-3xl font-black text-text-main mb-2 tracking-tight">Lesson Complete!</h2>
+              <p className="text-text-dim mb-8 font-medium leading-relaxed">
+                You've mastered all the exercises in this lesson. Your progress has been saved.
+              </p>
+              <button
+                onClick={() => {
+                  setShowLessonComplete(false);
+                  setActiveTab('learn');
+                }}
+                className="w-full py-4 bg-accent-blue text-white rounded-xl font-bold uppercase tracking-widest hover:brightness-110 transition-all active:scale-95"
+              >
+                Back to Learning Path
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Results Modal */}
       <AnimatePresence>
