@@ -9,17 +9,46 @@ export interface LessonText {
   text: string;
 }
 
-export async function getLessonTexts(difficulty: string, level: string) {
+export const getLessonTexts = async (
+  difficulty: string,
+  level: string,
+  lessonNumber: number
+): Promise<LessonText[]> => {
   const { data, error } = await supabase
     .from('lesson_texts')
     .select('*')
     .eq('difficulty', difficulty)
-    .eq('level', level);
+    .eq('level', level)
+    .eq('lesson_number', lessonNumber)
+    .order('exercise_number', { ascending: true });
 
   if (error) {
     console.error('Error fetching lesson texts:', error);
     return [];
   }
 
-  return data as LessonText[];
-}
+  return data || [];
+};
+
+export const getLessonText = async (
+  difficulty: string,
+  level: string,
+  lessonNumber: number,
+  exerciseNumber: number
+): Promise<string | null> => {
+  const { data, error } = await supabase
+    .from('lesson_texts')
+    .select('text')
+    .eq('difficulty', difficulty)
+    .eq('level', level)
+    .eq('lesson_number', lessonNumber)
+    .eq('exercise_number', exerciseNumber)
+    .single();
+
+  if (error) {
+    console.error('Error fetching lesson text:', error);
+    return null;
+  }
+
+  return data?.text || null;
+};
