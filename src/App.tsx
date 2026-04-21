@@ -229,6 +229,8 @@ export default function App() {
             ).then((text) => {
               if (text) {
                 setCustomText(text);
+                setMode('Custom');
+                reset(true);
               }
             });
           }
@@ -317,7 +319,7 @@ export default function App() {
         if (text) {
           setLessonText(text);
           setCustomText(text);
-          setMode('Word Sprint');
+          setMode('Custom');
         }
       })
       .catch(console.error);
