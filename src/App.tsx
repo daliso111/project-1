@@ -229,6 +229,7 @@ export default function App() {
             ).then((text) => {
               if (text) {
                 setCustomText(text);
+                setLessonText(text);
                 setMode('Custom');
                 reset(true);
               }
