@@ -46,6 +46,7 @@ import { getLessons, Lesson, LessonKey } from './services/lessonService';
 import { LessonCard } from './components/LessonCard';
 import { LearningPath } from './components/LearningPath';
 import { getUserProgress, updateLevelProgress, UserProgress, DifficultyKey } from './services/progressService';
+import { getLessonText } from './services/contentService';
 
 export const isLoggingInRef = { current: false };
 
@@ -105,6 +106,18 @@ export default function App() {
   const [mode, setMode] = useState<PracticeMode>('Time Attack');
   const [timeLimit, setTimeLimit] = useState<TimeLimit>(60);
   const [activeTab, setActiveTab] = useState<'practice' | 'stats' | 'learn'>('learn');
+  const [activeLesson, setActiveLesson] = useState<{
+    difficulty: DifficultyKey;
+    level: 'level1' | 'level2' | 'level3';
+    lessonNum: number;
+  } | null>(null);
+  const [lessonText, setLessonText] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (activeTab !== 'practice') {
+      setLessonText(null);
+    }
+  }, [activeTab]);
 
   // Adaptive Difficulty logic
   const adaptedLevel = useAdaptiveDifficulty(history);
@@ -261,13 +274,30 @@ export default function App() {
   };
 
   const handleStartLesson = (difficulty: DifficultyKey, level: 'level1' | 'level2' | 'level3', lesson: number) => {
+    const currentProgress = userProgress?.[difficulty]?.[level];
+    const exerciseNumber = (currentProgress?.lessonExercises?.[lesson] ?? 0) + 1;
+
+    setActiveLesson({ difficulty, level, lessonNum: lesson });
     setActiveTab('practice');
     setDifficulty(difficulty.charAt(0).toUpperCase() + difficulty.slice(1) as any);
+
+    // Fetch text from Supabase
+    getLessonText(difficulty, level, lesson, Math.min(exerciseNumber, 3))
+      .then((text) => {
+        if (text) {
+          setLessonText(text);
+          setCustomText(text);
+          setMode('Custom');
+        }
+      })
+      .catch(console.error);
   };
 
   const handleStartTest = (difficulty: DifficultyKey, level: 'level1' | 'level2' | 'level3') => {
+    setActiveLesson(null);
     setActiveTab('practice');
     setDifficulty(difficulty.charAt(0).toUpperCase() + difficulty.slice(1) as any);
+    setMode('Time Attack');
   };
 
   const handleLogout = async () => {
