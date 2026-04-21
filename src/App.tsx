@@ -168,7 +168,7 @@ export default function App() {
     handleInput,
     reset,
     timeElapsed
-  } = useTypingEngine(mode, effectiveDifficulty, timeLimit, selectedLanguage, punctMode, customText);
+  } = useTypingEngine(mode, effectiveDifficulty, timeLimit, selectedLanguage, punctMode, customText, lessonText || undefined);
 
   useEffect(() => {
     if (isFinished) {
@@ -303,24 +303,25 @@ export default function App() {
     inputRef.current?.focus();
   };
 
-  const handleStartLesson = (difficulty: DifficultyKey, level: 'level1' | 'level2' | 'level3', lesson: number) => {
+  const handleStartLesson = async (difficulty: DifficultyKey, level: 'level1' | 'level2' | 'level3', lesson: number) => {
     const currentProgress = userProgress?.[difficulty]?.[level];
-    const exerciseNumber = (currentProgress?.lessonExercises?.[lesson] ?? 0) + 1;
+    const exerciseNumber = Math.min((currentProgress?.lessonExercises?.[lesson] ?? 0) + 1, 3);
 
-    setActiveLesson({ difficulty, level, lessonNum: lesson });
-    setActiveTab('practice');
-    setDifficulty(difficulty.charAt(0).toUpperCase() + difficulty.slice(1) as any);
-
-    // Fetch text from Supabase
-    getLessonText(difficulty, level, lesson, Math.min(exerciseNumber, 3))
-      .then((text) => {
-        if (text) {
-          setLessonText(text);
-          setCustomText(text);
-          setMode('Word Sprint');
-        }
-      })
-      .catch(console.error);
+    try {
+      const text = await getLessonText(difficulty, level, lesson, exerciseNumber);
+      if (text) {
+        setCustomText(text);
+        setLessonText(text);
+        setMode('Custom');
+        setActiveLesson({ difficulty, level, lessonNum: lesson });
+        setDifficulty(difficulty.charAt(0).toUpperCase() + difficulty.slice(1) as any);
+      } else {
+        console.warn('No text found in Supabase for this lesson');
+      }
+    } catch (error) {
+      console.error('Error fetching lesson text:', error);
+    }
+    // Do NOT call setActiveTab here — user stays on Learn tab
   };
 
   const handleStartTest = (difficulty: DifficultyKey, level: 'level1' | 'level2' | 'level3') => {
@@ -640,6 +641,7 @@ export default function App() {
             isLoading={progressLoading}
             onStartLesson={handleStartLesson}
             onStartTest={handleStartTest}
+            onBeginPractice={() => setActiveTab('practice')}
           />
         ) : activeTab === 'practice' ? (
           <div className="space-y-6">
