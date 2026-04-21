@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Lock, CheckCircle, PlayCircle, Trophy } from 'lucide-react';
+import { Lock, CheckCircle, PlayCircle, Trophy, ChevronRight } from 'lucide-react';
 import { UserProgress, isLevelUnlocked, PASS_THRESHOLDS, DifficultyKey } from '../services/progressService';
 import { cn } from '../lib/utils';
 
@@ -9,6 +9,7 @@ interface LearningPathProps {
   isLoading: boolean;
   onStartLesson: (difficulty: DifficultyKey, level: 'level1' | 'level2' | 'level3', lesson: number) => void;
   onStartTest: (difficulty: DifficultyKey, level: 'level1' | 'level2' | 'level3') => void;
+  onBeginPractice: () => void;
 }
 
 const DIFFICULTIES: { key: DifficultyKey; label: string; color: string; activeClass: string }[] = [
@@ -57,8 +58,9 @@ function ProgressRing({ exercises, total = 3, size = 64, color = '#3b82f6' }: {
   );
 }
 
-export function LearningPath({ progress, isLoading, onStartLesson, onStartTest }: LearningPathProps) {
+export function LearningPath({ progress, isLoading, onStartLesson, onStartTest, onBeginPractice }: LearningPathProps) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyKey>('beginner');
+  const [selectedLesson, setSelectedLesson] = useState<{ level: string; lessonNum: number } | null>(null);
 
   if (isLoading) {
     return (
@@ -142,13 +144,17 @@ export function LearningPath({ progress, isLoading, onStartLesson, onStartTest }
                       <div key={lessonNum} className="flex flex-col items-center">
                         <button
                           disabled={!unlocked || (!completed && !isCurrent)}
-                          onClick={() => onStartLesson(selectedDifficulty, level, lessonNum)}
+                          onClick={() => {
+                            setSelectedLesson({ level, lessonNum: lessonNum });
+                            onStartLesson(selectedDifficulty, level, lessonNum);
+                          }}
                           className={cn(
                             "w-16 h-16 rounded-full flex flex-col items-center justify-center transition-all relative",
                             !unlocked && "cursor-not-allowed opacity-40",
                             unlocked && completed && "bg-accent-green/20 text-accent-green",
                             unlocked && isCurrent && "bg-accent-blue/20 text-accent-blue cursor-pointer",
-                            unlocked && !completed && !isCurrent && "bg-surface text-text-dim opacity-40 cursor-not-allowed"
+                            unlocked && !completed && !isCurrent && "bg-surface text-text-dim opacity-40 cursor-not-allowed",
+                            selectedLesson?.level === level && selectedLesson?.lessonNum === lessonNum && "ring-4 ring-accent-blue ring-offset-4 ring-offset-bg"
                           )}
                         >
                           {/* Progress ring */}
@@ -207,6 +213,23 @@ export function LearningPath({ progress, isLoading, onStartLesson, onStartTest }
                       ? `Passed ${levelProgress.testWpm} WPM`
                       : `Take Test (${threshold.wpm} WPM)`}
                   </button>
+                )}
+
+                {selectedLesson?.level === level && (
+                  <div className="pt-2 border-t border-border-theme">
+                    <p className="text-[11px] font-black uppercase tracking-widest text-text-dim mb-3 text-center">
+                      Lesson {selectedLesson.lessonNum} Mastery
+                    </p>
+                    <motion.button
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      onClick={onBeginPractice}
+                      className="w-full py-3 bg-accent-blue text-white rounded-xl font-black text-[12px] uppercase tracking-wider hover:brightness-110 transition-all flex items-center justify-center gap-2"
+                    >
+                      <ChevronRight size={14} />
+                      Start Practice
+                    </motion.button>
+                  </div>
                 )}
               </motion.div>
             );
