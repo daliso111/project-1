@@ -205,6 +205,8 @@ export default function App() {
               if (text) {
                 setCustomText(text);
                 setLessonText(text);
+
+                setMode('Custom');
                 reset(true);
               }
             });
@@ -284,6 +286,7 @@ export default function App() {
     const currentProgress = userProgress?.[difficulty]?.[level];
     const exerciseNumber = Math.min((currentProgress?.lessonExercises?.[lesson] ?? 0) + 1, 3);
 
+
     try {
       const text = await getLessonText(difficulty, level, lesson, exerciseNumber);
       if (text) {
@@ -299,6 +302,7 @@ export default function App() {
       console.error('Error fetching lesson text:', error);
     }
     // Do NOT call setActiveTab here — user stays on Learn tab
+
   };
 
   const handleStartTest = (difficulty: DifficultyKey, level: 'level1' | 'level2' | 'level3') => {
