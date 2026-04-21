@@ -6,9 +6,7 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { Login } from './components/Login';
 import { Signup } from './components/Signup';
 import { ProfileSetup } from './components/ProfileSetup';
-import { 
-  Trophy, 
-} from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { Difficulty, PracticeMode, TimeLimit, SessionResult } from './constants';
 import { useTypingEngine } from './hooks/useTypingEngine';
 import { CustomTextModal } from './components/CustomTextModal';
@@ -206,6 +204,8 @@ export default function App() {
             ).then((text) => {
               if (text) {
                 setCustomText(text);
+                setLessonText(text);
+                reset(true);
               }
             });
           }
@@ -400,6 +400,7 @@ export default function App() {
             onStartLesson={handleStartLesson}
             onStartTest={handleStartTest}
             onBeginPractice={() => setActiveTab('practice')}
+            activeLesson={activeLesson}
           />
         ) : activeTab === 'practice' ? (
           <PracticeTab

@@ -10,6 +10,11 @@ interface LearningPathProps {
   onStartLesson: (difficulty: DifficultyKey, level: 'level1' | 'level2' | 'level3', lesson: number) => void;
   onStartTest: (difficulty: DifficultyKey, level: 'level1' | 'level2' | 'level3') => void;
   onBeginPractice: () => void;
+  activeLesson?: {
+    difficulty: DifficultyKey;
+    level: 'level1' | 'level2' | 'level3';
+    lessonNum: number;
+  } | null;
 }
 
 const DIFFICULTIES: { key: DifficultyKey; label: string; color: string; activeClass: string }[] = [
@@ -58,9 +63,11 @@ function ProgressRing({ exercises, total = 3, size = 64, color = '#3b82f6' }: {
   );
 }
 
-export function LearningPath({ progress, isLoading, onStartLesson, onStartTest, onBeginPractice }: LearningPathProps) {
-  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyKey>('beginner');
-  const [selectedLesson, setSelectedLesson] = useState<{ level: string; lessonNum: number } | null>(null);
+export function LearningPath({ progress, isLoading, onStartLesson, onStartTest, onBeginPractice, activeLesson }: LearningPathProps) {
+  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyKey>(activeLesson?.difficulty || 'beginner');
+  const [selectedLesson, setSelectedLesson] = useState<{ level: string; lessonNum: number } | null>(
+    activeLesson ? { level: activeLesson.level, lessonNum: activeLesson.lessonNum } : null
+  );
 
   if (isLoading) {
     return (
