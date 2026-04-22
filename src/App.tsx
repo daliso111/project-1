@@ -200,6 +200,14 @@ export default function App() {
                 user={user}
                 unlockedIds={unlockedIds}
                 missedKeys={missedKeys}
+                activeLesson={
+                  activeLesson
+                    ? {
+                        difficulty: activeLesson.difficulty,
+                        level: activeLesson.level,
+                      }
+                    : null
+                }
               />
             )}
           </Suspense>

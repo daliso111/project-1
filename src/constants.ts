@@ -1,6 +1,15 @@
 export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Adaptive';
 export type PracticeMode = 'Time Attack' | 'Word Sprint' | 'Code' | 'Custom';
 export type TimeLimit = 30 | 60 | 120;
+export type LessonDifficultyKey = 'beginner' | 'intermediate' | 'advanced';
+export type LessonLevelKey = 'level1' | 'level2' | 'level3';
+
+export interface LessonSessionContext {
+  difficulty: LessonDifficultyKey;
+  level: LessonLevelKey;
+  lessonNum: number;
+  exerciseNum: number;
+}
 
 export interface SessionResult {
   id: string;
@@ -12,6 +21,7 @@ export interface SessionResult {
   difficulty: Difficulty;
   date: string;
   missedKeys: Record<string, number>;
+  lessonContext?: LessonSessionContext;
 }
 
 export const QUOTES = {

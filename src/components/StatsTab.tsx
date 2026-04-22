@@ -1,12 +1,14 @@
 import React, { Suspense, lazy } from 'react';
 import { Flame, Trophy, Zap } from 'lucide-react';
 import { User } from 'firebase/auth';
-import { SessionResult } from '../constants';
+import { LessonDifficultyKey, LessonLevelKey, SessionResult } from '../constants';
 import { DailyGoals } from './DailyGoals';
 import { BadgeGrid } from './BadgeGrid';
 
-const HistoryChart = lazy(() =>
-  import('./HistoryChart').then((module) => ({ default: module.HistoryChart }))
+const LessonPerformanceCharts = lazy(() =>
+  import('./LessonPerformanceCharts').then((module) => ({
+    default: module.LessonPerformanceCharts,
+  }))
 );
 const KeyboardHeatmap = lazy(() =>
   import('./KeyboardHeatmap').then((module) => ({ default: module.KeyboardHeatmap }))
@@ -19,6 +21,10 @@ interface StatsTabProps {
   user: User;
   unlockedIds: string[];
   missedKeys: Record<string, number>;
+  activeLesson?: {
+    difficulty: LessonDifficultyKey;
+    level: LessonLevelKey;
+  } | null;
 }
 
 export function StatsTab({
@@ -28,6 +34,7 @@ export function StatsTab({
   user,
   unlockedIds,
   missedKeys,
+  activeLesson,
 }: StatsTabProps) {
   return (
     <div className="space-y-6">
@@ -57,8 +64,8 @@ export function StatsTab({
           </div>
 
           <DailyGoals history={history} userId={user.uid} />
-          <Suspense fallback={<StatsPanelFallback className="h-64" />}>
-            <HistoryChart history={history} />
+          <Suspense fallback={<StatsPanelFallback className="h-[34rem]" />}>
+            <LessonPerformanceCharts history={history} activeLesson={activeLesson} />
           </Suspense>
           <BadgeGrid unlockedIds={unlockedIds} />
           <Suspense fallback={<StatsPanelFallback className="h-56" />}>
