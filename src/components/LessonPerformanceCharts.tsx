@@ -68,10 +68,21 @@ export function LessonPerformanceCharts({
           </span>
         </div>
         {hasLessonData ? (
-          <ResponsiveContainer width="100%" height={240}>
+          <ResponsiveContainer width="100%" height={280}>
             <LineChart data={exerciseChartData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff0a" />
-              <XAxis dataKey="label" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
+              <XAxis
+                dataKey="label"
+                stroke="#94a3b8"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                interval={0}
+                angle={-35}
+                textAnchor="end"
+                height={56}
+                tickMargin={12}
+              />
               <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} domain={['dataMin - 5', 'dataMax + 5']} />
               <Tooltip
                 contentStyle={{
@@ -114,20 +125,27 @@ export function LessonPerformanceCharts({
           </span>
         </div>
         {hasAverageData ? (
-          <ResponsiveContainer width="100%" height={240}>
+          <ResponsiveContainer width="100%" height={280}>
             <LineChart data={lessonAverageData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff0a" />
-              <XAxis dataKey="label" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
-              <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} domain={['dataMin - 5', 'dataMax + 5']} />
+              <XAxis
+                dataKey="label"
+                stroke="#94a3b8"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                interval={0}
+                tickMargin={12}
+              />
+              <YAxis
+                stroke="#94a3b8"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                domain={getLessonAverageDomain(lessonAverageData)}
+              />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1e293b',
-                  borderRadius: '8px',
-                  border: '1px solid #334155',
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                }}
-                itemStyle={{ fontSize: '12px', color: '#f8fafc' }}
-                formatter={(value: number | null) => (value === null ? 'Incomplete lesson' : `${value} WPM avg`)}
+                content={<LessonAverageTooltip />}
               />
               <Line
                 type="monotone"
@@ -136,6 +154,14 @@ export function LessonPerformanceCharts({
                 strokeWidth={2}
                 dot={{ fill: '#22c55e', r: 4 }}
                 activeDot={{ r: 6, fill: '#22c55e' }}
+                connectNulls={false}
+              />
+              <Line
+                type="monotone"
+                dataKey="partialAverageWpm"
+                stroke="transparent"
+                dot={<IncompleteLessonDot />}
+                activeDot={false}
                 connectNulls={false}
               />
             </LineChart>
@@ -195,10 +221,19 @@ function buildLessonAverageData(history: SessionResult[]) {
               EXERCISES_PER_LESSON
           )
         : null;
+    const partialAverageWpm =
+      exerciseBest.size > 0 && exerciseBest.size < EXERCISES_PER_LESSON
+        ? Math.round(
+            Array.from(exerciseBest.values()).reduce((sum, value) => sum + value, 0) /
+              exerciseBest.size
+          )
+        : null;
 
     return {
       label: `Lesson ${lessonNum}`,
       averageWpm,
+      partialAverageWpm,
+      completedExercises: exerciseBest.size,
     };
   });
 }
@@ -242,4 +277,105 @@ function EmptyChartState({ message }: { message: string }) {
 
 function EmptyPanelMessage({ message }: { message: string }) {
   return <p className="text-[13px] text-text-dim py-16 text-center">{message}</p>;
+}
+
+function getLessonAverageDomain(
+  data: Array<{ averageWpm: number | null; partialAverageWpm?: number | null }>
+) {
+  const values = data.flatMap((point) =>
+    [point.averageWpm, point.partialAverageWpm].filter(
+      (value): value is number => value !== null && value !== undefined
+    )
+  );
+
+  if (values.length === 0) {
+    return [0, 50];
+  }
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+
+  return [Math.max(0, min - 5), max + 5];
+}
+
+function LessonAverageTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: Array<{
+    payload?: {
+      averageWpm: number | null;
+      partialAverageWpm?: number | null;
+      completedExercises: number;
+    };
+  }>;
+  label?: string;
+}) {
+  if (!active || !payload?.length) {
+    return null;
+  }
+
+  const point = payload[0]?.payload as
+    | {
+        averageWpm: number | null;
+        partialAverageWpm?: number | null;
+        completedExercises: number;
+      }
+    | undefined;
+
+  if (!point) {
+    return null;
+  }
+
+  const isComplete = point.averageWpm !== null;
+  const displayValue = isComplete ? point.averageWpm : point.partialAverageWpm;
+
+  return (
+    <div
+      style={{
+        backgroundColor: '#1e293b',
+        borderRadius: '8px',
+        border: '1px solid #334155',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+        padding: '10px 12px',
+      }}
+    >
+      <div style={{ fontSize: '12px', color: '#f8fafc', fontWeight: 700 }}>{label}</div>
+      <div style={{ fontSize: '12px', color: '#f8fafc', marginTop: 4 }}>
+        {isComplete
+          ? `${displayValue} WPM average`
+          : displayValue !== null && displayValue !== undefined
+            ? `${displayValue} WPM partial average`
+            : 'No exercises recorded'}
+      </div>
+      {!isComplete && (
+        <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: 4 }}>
+          {point.completedExercises}/3 exercises completed
+        </div>
+      )}
+    </div>
+  );
+}
+
+function IncompleteLessonDot(props: any) {
+  const { cx, cy, payload } = props;
+
+  if (
+    typeof cx !== 'number' ||
+    typeof cy !== 'number' ||
+    payload?.averageWpm !== null ||
+    payload?.partialAverageWpm === null ||
+    payload?.partialAverageWpm === undefined
+  ) {
+    return null;
+  }
+
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={5} fill="#0f172a" stroke="#94a3b8" strokeWidth={2} />
+      <circle cx={cx} cy={cy} r={2} fill="#94a3b8" />
+    </g>
+  );
 }
