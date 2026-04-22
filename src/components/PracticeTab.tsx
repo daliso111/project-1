@@ -22,6 +22,7 @@ interface PracticeTabProps {
   inputRef: React.RefObject<HTMLInputElement | null>;
   isStarted: boolean;
   reset: (tryAgain?: boolean) => void;
+  isAdvancingExercise?: boolean;
 }
 
 export function PracticeTab({
@@ -40,6 +41,7 @@ export function PracticeTab({
   inputRef,
   isStarted,
   reset,
+  isAdvancingExercise = false,
 }: PracticeTabProps) {
   return (
     <div className="space-y-6">
@@ -105,7 +107,19 @@ export function PracticeTab({
           </div>
         </div>
 
-        {!isStarted && !isFinished && (
+        {isAdvancingExercise && (
+          <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-bg/80 backdrop-blur-sm border border-border-theme">
+            <motion.p
+              animate={{ opacity: [0.35, 1, 0.35] }}
+              transition={{ repeat: Infinity, duration: 1.1 }}
+              className="text-text-main font-semibold"
+            >
+              Loading next exercise...
+            </motion.p>
+          </div>
+        )}
+
+        {!isStarted && !isFinished && !isAdvancingExercise && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none rounded-2xl">
             <motion.p
               animate={{ opacity: [0.3, 0.7, 0.3] }}
