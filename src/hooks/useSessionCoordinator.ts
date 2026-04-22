@@ -56,6 +56,7 @@ interface UseSessionCoordinatorArgs {
   }) => void;
   handleInput: (value: string) => void;
   reset: (keepText?: boolean) => void;
+  loadText: (nextText: string) => void;
 }
 
 export function useSessionCoordinator({
@@ -89,8 +90,10 @@ export function useSessionCoordinator({
   checkBadges,
   handleInput,
   reset,
+  loadText,
 }: UseSessionCoordinatorArgs) {
   const [showLessonComplete, setShowLessonComplete] = useState(false);
+  const [isAdvancingExercise, setIsAdvancingExercise] = useState(false);
   const {
     history,
     setHistory,
@@ -160,6 +163,7 @@ export function useSessionCoordinator({
     }
 
     if (activeLesson && user) {
+      setIsAdvancingExercise(true);
       completeExercise(
         user.uid,
         activeLesson.difficulty,
@@ -170,6 +174,7 @@ export function useSessionCoordinator({
           await refreshUserProgress();
 
           if (lessonCompleted) {
+            setIsAdvancingExercise(false);
             setShowLessonComplete(true);
             setActiveLesson(null);
             return;
@@ -192,10 +197,14 @@ export function useSessionCoordinator({
               exerciseNum: nextExerciseNumber,
             });
             setMode('Custom');
-            reset(true);
+            loadText(nextText);
           }
+          setIsAdvancingExercise(false);
         })
-        .catch(console.error);
+        .catch((error) => {
+          setIsAdvancingExercise(false);
+          console.error(error);
+        });
     }
   }, [
     activeLesson,
@@ -204,6 +213,7 @@ export function useSessionCoordinator({
     difficulty,
     errors,
     isFinished,
+    loadText,
     missedKeys,
     mode,
     playComplete,
@@ -291,6 +301,7 @@ export function useSessionCoordinator({
     });
     setActiveTab('practice');
     setDifficulty(toDisplayDifficulty(nextDifficulty));
+    setIsAdvancingExercise(true);
 
     getLessonText(nextDifficulty, level, lesson, Math.min(exerciseNumber, 3))
       .then((nextText) => {
@@ -298,8 +309,13 @@ export function useSessionCoordinator({
         setLessonText(nextText);
         setCustomText(nextText);
         setMode('Custom');
+        loadText(nextText);
+        setIsAdvancingExercise(false);
       })
-      .catch(console.error);
+      .catch((error) => {
+        setIsAdvancingExercise(false);
+        console.error(error);
+      });
   };
 
   const handleStartTest = (
@@ -320,6 +336,7 @@ export function useSessionCoordinator({
     lessonsLoading,
     showLessonComplete,
     setShowLessonComplete,
+    isAdvancingExercise,
     personalBest,
     focusInput,
     onInputChange,
