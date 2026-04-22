@@ -2,7 +2,7 @@ import { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { User } from 'firebase/auth';
 import { db } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';
-import { Difficulty, PracticeMode, SessionResult, TimeLimit } from '../constants';
+import { Difficulty, LessonLevelKey, PracticeMode, SessionResult, TimeLimit } from '../constants';
 import {
   DifficultyKey,
   completeExercise,
@@ -14,8 +14,9 @@ import { useUserLearningData } from './useUserLearningData';
 type ActiveTab = 'practice' | 'stats' | 'learn';
 type ActiveLesson = {
   difficulty: DifficultyKey;
-  level: 'level1' | 'level2' | 'level3';
+  level: LessonLevelKey;
   lessonNum: number;
+  exerciseNum: number;
 } | null;
 
 interface UseSessionCoordinatorArgs {
@@ -132,6 +133,14 @@ export function useSessionCoordinator({
       difficulty,
       date: new Date().toISOString(),
       missedKeys,
+      lessonContext: activeLesson
+        ? {
+            difficulty: activeLesson.difficulty,
+            level: activeLesson.level,
+            lessonNum: activeLesson.lessonNum,
+            exerciseNum: activeLesson.exerciseNum,
+          }
+        : undefined,
     };
 
     const nextHistory = [...historyRef.current, result];
@@ -176,6 +185,12 @@ export function useSessionCoordinator({
           if (nextText) {
             setCustomText(nextText);
             setLessonText(nextText);
+            setActiveLesson({
+              difficulty: activeLesson.difficulty,
+              level: activeLesson.level,
+              lessonNum: activeLesson.lessonNum,
+              exerciseNum: nextExerciseNumber,
+            });
             setMode('Custom');
             reset(true);
           }
@@ -262,13 +277,18 @@ export function useSessionCoordinator({
 
   const handleStartLesson = (
     nextDifficulty: DifficultyKey,
-    level: 'level1' | 'level2' | 'level3',
+    level: LessonLevelKey,
     lesson: number
   ) => {
     const currentProgress = userProgress?.[nextDifficulty]?.[level];
     const exerciseNumber = (currentProgress?.lessonExercises?.[lesson] ?? 0) + 1;
 
-    setActiveLesson({ difficulty: nextDifficulty, level, lessonNum: lesson });
+    setActiveLesson({
+      difficulty: nextDifficulty,
+      level,
+      lessonNum: lesson,
+      exerciseNum: Math.min(exerciseNumber, 3),
+    });
     setActiveTab('practice');
     setDifficulty(toDisplayDifficulty(nextDifficulty));
 
@@ -284,7 +304,7 @@ export function useSessionCoordinator({
 
   const handleStartTest = (
     nextDifficulty: DifficultyKey,
-    _level: 'level1' | 'level2' | 'level3'
+    _level: LessonLevelKey
   ) => {
     setActiveLesson(null);
     setActiveTab('practice');

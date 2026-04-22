@@ -98,7 +98,11 @@ function normalizeHistory(history: SessionResult[]) {
       session.errors === previous.errors &&
       session.timeTaken === previous.timeTaken &&
       session.mode === previous.mode &&
-      session.difficulty === previous.difficulty;
+      session.difficulty === previous.difficulty &&
+      session.lessonContext?.difficulty === previous.lessonContext?.difficulty &&
+      session.lessonContext?.level === previous.lessonContext?.level &&
+      session.lessonContext?.lessonNum === previous.lessonContext?.lessonNum &&
+      session.lessonContext?.exerciseNum === previous.lessonContext?.exerciseNum;
 
     return !looksDuplicated;
   });
