@@ -168,7 +168,8 @@ export function useSessionCoordinator({
         user.uid,
         activeLesson.difficulty,
         activeLesson.level,
-        activeLesson.lessonNum
+        activeLesson.lessonNum,
+        activeLesson.exerciseNum
       )
         .then(async ({ lessonCompleted, nextExerciseNumber }) => {
           await refreshUserProgress();
@@ -188,6 +189,12 @@ export function useSessionCoordinator({
           );
 
           if (nextText) {
+            setActiveLesson({
+              difficulty: activeLesson.difficulty,
+              level: activeLesson.level,
+              lessonNum: activeLesson.lessonNum,
+              exerciseNum: nextExerciseNumber,
+            });
             setCustomText(nextText);
             setLessonText(nextText);
             setActiveLesson({
@@ -291,13 +298,13 @@ export function useSessionCoordinator({
     lesson: number
   ) => {
     const currentProgress = userProgress?.[nextDifficulty]?.[level];
-    const exerciseNumber = (currentProgress?.lessonExercises?.[lesson] ?? 0) + 1;
+    const exerciseNumber = Math.min((currentProgress?.lessonExercises?.[lesson] ?? 0) + 1, 3);
 
     setActiveLesson({
       difficulty: nextDifficulty,
       level,
       lessonNum: lesson,
-      exerciseNum: Math.min(exerciseNumber, 3),
+
     });
     setActiveTab('practice');
     setDifficulty(toDisplayDifficulty(nextDifficulty));
