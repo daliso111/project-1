@@ -15,6 +15,7 @@ interface TypingState {
   errors: number;
   missedKeys: Record<string, number>;
   correctChars: number;
+  duration: number | null;
 }
 
 import { CODE_SNIPPETS } from '../codeSnippets';
@@ -38,6 +39,7 @@ export function useTypingEngine(
     errors: 0,
     missedKeys: {},
     correctChars: 0,
+    duration: null,
   });
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -92,6 +94,7 @@ export function useTypingEngine(
         errors: 0,
         missedKeys: {},
         correctChars: 0,
+        duration: null,
       };
     });
     if (timerRef.current) clearInterval(timerRef.current);
@@ -107,10 +110,11 @@ export function useTypingEngine(
   }, []);
 
   const handleInput = useCallback((value: string) => {
-    if (state.isFinished) return;
-
     setState(prev => {
-      let { isStarted, startTime, timeLeft, errors, missedKeys, correctChars } = prev;
+      if (prev.isFinished) return prev;
+
+      let { isStarted, startTime, errors, correctChars } = prev;
+      const missedKeys = { ...prev.missedKeys };
 
       if (!isStarted) {
         isStarted = true;
@@ -134,10 +138,12 @@ export function useTypingEngine(
       // Check if finished
       const isFinished = value.length === prev.text.length;
       let sessionEndReason = prev.sessionEndReason;
+      let duration = prev.duration;
       
       if (isFinished) {
         if (timerRef.current) clearInterval(timerRef.current);
         sessionEndReason = 'completed';
+        duration = startTime ? (Date.now() - startTime) / 1000 : 0;
       }
  
       return {
@@ -149,10 +155,11 @@ export function useTypingEngine(
         missedKeys,
         correctChars,
         isFinished,
-        sessionEndReason
+        sessionEndReason,
+        duration
       };
     });
-  }, [state.isFinished]);
+  }, []);
 
   useEffect(() => {
     if (state.isStarted && !state.isFinished) {
@@ -166,7 +173,8 @@ export function useTypingEngine(
                 timeLeft: 0, 
                 isFinished: true, 
                 isStarted: false,
-                sessionEndReason: 'timeout' 
+                sessionEndReason: 'timeout',
+                duration: timeLimit
               };
             }
             return { ...prev, timeLeft: prev.timeLeft - 1 };
@@ -180,10 +188,10 @@ export function useTypingEngine(
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     }
-  }, [state.isStarted, state.isFinished, mode]);
+  }, [state.isStarted, state.isFinished, mode, timeLimit]);
 
-  const elapsed = state.startTime ? (Date.now() - state.startTime) / 1000 : 0;
-  const currentWpm = calculateWPM(state.correctChars, mode === 'Time Attack' ? (timeLimit - state.timeLeft) : elapsed);
+  const elapsed = state.duration !== null ? state.duration : (state.startTime ? (Date.now() - state.startTime) / 1000 : 0);
+  const currentWpm = calculateWPM(state.correctChars, (mode === 'Time Attack' && !state.isFinished) ? (timeLimit - state.timeLeft) : elapsed);
   const currentAccuracy = calculateAccuracy(state.correctChars, state.userInput.length);
 
   return {

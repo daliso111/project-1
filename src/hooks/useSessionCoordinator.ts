@@ -102,15 +102,22 @@ export function useSessionCoordinator({
   } = useUserLearningData(user);
 
   const historyRef = useRef(history);
+  const hasSavedRef = useRef(false);
 
   useEffect(() => {
     historyRef.current = history;
   }, [history]);
 
   useEffect(() => {
-    if (!isFinished) return;
+    if (!isFinished) {
+      hasSavedRef.current = false;
+      return;
+    }
+
+    if (hasSavedRef.current) return;
 
     playComplete();
+    hasSavedRef.current = true;
 
     const result: SessionResult = {
       id: Date.now().toString(),

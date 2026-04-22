@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { User } from 'firebase/auth';
 import { SessionResult } from '../constants';
 import { Lesson, LessonKey, getLessons } from '../services/lessonService';
@@ -45,7 +45,7 @@ export function useUserLearningData(user: User | null) {
       .finally(() => setProgressLoading(false));
   }, [user]);
 
-  const refreshUserProgress = async () => {
+  const refreshUserProgress = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -54,15 +54,15 @@ export function useUserLearningData(user: User | null) {
     } catch (error) {
       console.error(error);
     }
-  };
+  }, [user]);
 
-  const persistHistory = (nextHistory: SessionResult[]) => {
+  const persistHistory = useCallback((nextHistory: SessionResult[]) => {
     setHistory(nextHistory);
 
     if (user) {
       localStorage.setItem(`swifttype_history_${user.uid}`, JSON.stringify(nextHistory));
     }
-  };
+  }, [user]);
 
   return {
     history,
