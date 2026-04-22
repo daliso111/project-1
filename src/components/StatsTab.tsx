@@ -1,13 +1,18 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Flame, Trophy, Zap } from 'lucide-react';
 import { User } from 'firebase/auth';
-import { SessionResult } from '../constants';
+import { LessonDifficultyKey, LessonLevelKey, SessionResult } from '../constants';
 import { DailyGoals } from './DailyGoals';
-import { HistoryChart } from './HistoryChart';
-import { ExerciseWpmChart } from './ExerciseWpmChart';
-import { LessonAverageChart } from './LessonAverageChart';
 import { BadgeGrid } from './BadgeGrid';
-import { KeyboardHeatmap } from './KeyboardHeatmap';
+
+const LessonPerformanceCharts = lazy(() =>
+  import('./LessonPerformanceCharts').then((module) => ({
+    default: module.LessonPerformanceCharts,
+  }))
+);
+const KeyboardHeatmap = lazy(() =>
+  import('./KeyboardHeatmap').then((module) => ({ default: module.KeyboardHeatmap }))
+);
 
 interface StatsTabProps {
   streak: number;
@@ -16,6 +21,10 @@ interface StatsTabProps {
   user: User;
   unlockedIds: string[];
   missedKeys: Record<string, number>;
+  activeLesson?: {
+    difficulty: LessonDifficultyKey;
+    level: LessonLevelKey;
+  } | null;
 }
 
 export function StatsTab({
@@ -25,6 +34,7 @@ export function StatsTab({
   user,
   unlockedIds,
   missedKeys,
+  activeLesson,
 }: StatsTabProps) {
   return (
     <div className="space-y-6">
@@ -55,14 +65,14 @@ export function StatsTab({
 
           <DailyGoals history={history} userId={user.uid} />
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <ExerciseWpmChart history={history} />
-            <LessonAverageChart history={history} />
-          </div>
+          <Suspense fallback={<StatsPanelFallback className="h-[34rem]" />}>
+            <LessonPerformanceCharts history={history} activeLesson={activeLesson} />
+          </Suspense>
 
-          <HistoryChart history={history} />
           <BadgeGrid unlockedIds={unlockedIds} />
-          <KeyboardHeatmap missedKeys={missedKeys} />
+          <Suspense fallback={<StatsPanelFallback className="h-56" />}>
+            <KeyboardHeatmap missedKeys={missedKeys} />
+          </Suspense>
         </div>
 
         <div className="lg:col-span-4 space-y-6">
@@ -88,6 +98,22 @@ export function StatsTab({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+interface StatsPanelFallbackProps {
+  className: string;
+}
+
+function StatsPanelFallback({ className }: StatsPanelFallbackProps) {
+  return (
+    <div className={`bg-surface border border-border-theme rounded-xl p-6 animate-pulse ${className}`}>
+      <div className="flex justify-between items-center mb-6">
+        <div className="h-4 w-40 rounded bg-bg/80" />
+        <div className="h-3 w-24 rounded bg-bg/60" />
+      </div>
+      <div className="h-[calc(100%-2.5rem)] rounded-lg bg-bg/50" />
     </div>
   );
 }

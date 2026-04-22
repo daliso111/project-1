@@ -1,6 +1,15 @@
 export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Adaptive';
 export type PracticeMode = 'Time Attack' | 'Word Sprint' | 'Code' | 'Custom';
 export type TimeLimit = 30 | 60 | 120;
+export type LessonDifficultyKey = 'beginner' | 'intermediate' | 'advanced';
+export type LessonLevelKey = 'level1' | 'level2' | 'level3';
+
+export interface LessonSessionContext {
+  difficulty: LessonDifficultyKey;
+  level: LessonLevelKey;
+  lessonNum: number;
+  exerciseNum: number;
+}
 
 export interface SessionResult {
   id: string;
@@ -12,9 +21,7 @@ export interface SessionResult {
   difficulty: Difficulty;
   date: string;
   missedKeys: Record<string, number>;
-  level?: 'level1' | 'level2' | 'level3';
-  lessonNum?: number;
-  exerciseNum?: number;
+  lessonContext?: LessonSessionContext;
 }
 
 export const QUOTES = {
@@ -52,7 +59,7 @@ export const QUOTES = {
 
 export const COMMON_WORDS = [
   "the", "be", "to", "of", "and", "a", "in", "that", "have", "i", "it", "for", "not", "on", "with", "he", "as", "you", "do", "at", 
-  "this", "but", "his", "by", "from", "they", "we", "say", "her", "she", "or", "an", "will", "my", "one", "all", "would", "there", 
+  "this", "this", "but", "his", "by", "from", "they", "we", "say", "her", "she", "or", "an", "will", "my", "one", "all", "would", "there",
   "their", "what", "so", "up", "out", "if", "about", "who", "get", "which", "go", "me", "when", "make", "can", "like", "time", "no", 
   "just", "him", "know", "take", "people", "into", "year", "your", "good", "some", "could", "them", "see", "other", "than", "then", 
   "now", "look", "only", "come", "its", "over", "think", "also", "back", "after", "use", "two", "how", "our", "work", "first", "well", 

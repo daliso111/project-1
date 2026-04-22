@@ -32,6 +32,7 @@ type ActiveLesson = {
   difficulty: DifficultyKey;
   level: 'level1' | 'level2' | 'level3';
   lessonNum: number;
+  exerciseNum: number;
 } | null;
 
 export default function App() {
@@ -74,6 +75,7 @@ export default function App() {
     missedKeys,
     handleInput,
     reset,
+    loadText,
     timeElapsed,
   } = useTypingEngine(mode, difficulty, timeLimit, selectedLanguage, punctMode, customText);
 
@@ -91,6 +93,7 @@ export default function App() {
     handleStartLesson,
     handleStartTest,
     setHistory,
+    isAdvancingExercise,
   } = useSessionCoordinator({
     user,
     inputRef,
@@ -123,6 +126,7 @@ export default function App() {
     checkBadges,
     handleInput,
     reset,
+    loadText,
   });
 
   const adaptedLevel = useAdaptiveDifficulty(history);
@@ -189,6 +193,7 @@ export default function App() {
                 inputRef={inputRef}
                 isStarted={isStarted}
                 reset={reset}
+                isAdvancingExercise={isAdvancingExercise}
               />
             )}
 
@@ -200,6 +205,14 @@ export default function App() {
                 user={user}
                 unlockedIds={unlockedIds}
                 missedKeys={missedKeys}
+                activeLesson={
+                  activeLesson
+                    ? {
+                        difficulty: activeLesson.difficulty,
+                        level: activeLesson.level,
+                      }
+                    : null
+                }
               />
             )}
           </Suspense>

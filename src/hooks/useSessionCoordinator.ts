@@ -2,7 +2,7 @@ import { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { User } from 'firebase/auth';
 import { db } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';
-import { Difficulty, PracticeMode, SessionResult, TimeLimit } from '../constants';
+import { Difficulty, LessonLevelKey, PracticeMode, SessionResult, TimeLimit } from '../constants';
 import {
   DifficultyKey,
   completeExercise,
@@ -14,7 +14,7 @@ import { useUserLearningData } from './useUserLearningData';
 type ActiveTab = 'practice' | 'stats' | 'learn';
 type ActiveLesson = {
   difficulty: DifficultyKey;
-  level: 'level1' | 'level2' | 'level3';
+  level: LessonLevelKey;
   lessonNum: number;
   exerciseNum: number;
 } | null;
@@ -56,6 +56,7 @@ interface UseSessionCoordinatorArgs {
   }) => void;
   handleInput: (value: string) => void;
   reset: (keepText?: boolean) => void;
+  loadText: (nextText: string) => void;
 }
 
 export function useSessionCoordinator({
@@ -89,8 +90,10 @@ export function useSessionCoordinator({
   checkBadges,
   handleInput,
   reset,
+  loadText,
 }: UseSessionCoordinatorArgs) {
   const [showLessonComplete, setShowLessonComplete] = useState(false);
+  const [isAdvancingExercise, setIsAdvancingExercise] = useState(false);
   const {
     history,
     setHistory,
@@ -103,7 +106,7 @@ export function useSessionCoordinator({
   } = useUserLearningData(user);
 
   const historyRef = useRef(history);
-  const hasSavedRef = useRef(false);
+  const hasProcessedFinishedSessionRef = useRef(false);
 
   useEffect(() => {
     historyRef.current = history;
@@ -111,14 +114,17 @@ export function useSessionCoordinator({
 
   useEffect(() => {
     if (!isFinished) {
-      hasSavedRef.current = false;
+      hasProcessedFinishedSessionRef.current = false;
       return;
     }
 
-    if (hasSavedRef.current) return;
+    if (hasProcessedFinishedSessionRef.current) {
+      return;
+    }
+
+    hasProcessedFinishedSessionRef.current = true;
 
     playComplete();
-    hasSavedRef.current = true;
 
     const result: SessionResult = {
       id: Date.now().toString(),
@@ -130,9 +136,14 @@ export function useSessionCoordinator({
       difficulty,
       date: new Date().toISOString(),
       missedKeys,
-      level: activeLesson?.level,
-      lessonNum: activeLesson?.lessonNum,
-      exerciseNum: activeLesson?.exerciseNum,
+      lessonContext: activeLesson
+        ? {
+            difficulty: activeLesson.difficulty,
+            level: activeLesson.level,
+            lessonNum: activeLesson.lessonNum,
+            exerciseNum: activeLesson.exerciseNum,
+          }
+        : undefined,
     };
 
     const nextHistory = [...historyRef.current, result];
@@ -152,6 +163,7 @@ export function useSessionCoordinator({
     }
 
     if (activeLesson && user) {
+      setIsAdvancingExercise(true);
       completeExercise(
         user.uid,
         activeLesson.difficulty,
@@ -163,6 +175,7 @@ export function useSessionCoordinator({
           await refreshUserProgress();
 
           if (lessonCompleted) {
+            setIsAdvancingExercise(false);
             setShowLessonComplete(true);
             setActiveLesson(null);
             return;
@@ -177,16 +190,22 @@ export function useSessionCoordinator({
 
           if (nextText) {
             setActiveLesson({
-              ...activeLesson,
+              difficulty: activeLesson.difficulty,
+              level: activeLesson.level,
+              lessonNum: activeLesson.lessonNum,
               exerciseNum: nextExerciseNumber,
             });
             setCustomText(nextText);
             setLessonText(nextText);
             setMode('Custom');
-            reset(true);
+            loadText(nextText);
           }
+          setIsAdvancingExercise(false);
         })
-        .catch(console.error);
+        .catch((error) => {
+          setIsAdvancingExercise(false);
+          console.error(error);
+        });
     }
   }, [
     activeLesson,
@@ -195,6 +214,7 @@ export function useSessionCoordinator({
     difficulty,
     errors,
     isFinished,
+    loadText,
     missedKeys,
     mode,
     playComplete,
@@ -268,7 +288,7 @@ export function useSessionCoordinator({
 
   const handleStartLesson = (
     nextDifficulty: DifficultyKey,
-    level: 'level1' | 'level2' | 'level3',
+    level: LessonLevelKey,
     lesson: number
   ) => {
     const currentProgress = userProgress?.[nextDifficulty]?.[level];
@@ -282,6 +302,7 @@ export function useSessionCoordinator({
     });
     setActiveTab('practice');
     setDifficulty(toDisplayDifficulty(nextDifficulty));
+    setIsAdvancingExercise(true);
 
     getLessonText(nextDifficulty, level, lesson, Math.min(exerciseNumber, 3))
       .then((nextText) => {
@@ -289,13 +310,18 @@ export function useSessionCoordinator({
         setLessonText(nextText);
         setCustomText(nextText);
         setMode('Custom');
+        loadText(nextText);
+        setIsAdvancingExercise(false);
       })
-      .catch(console.error);
+      .catch((error) => {
+        setIsAdvancingExercise(false);
+        console.error(error);
+      });
   };
 
   const handleStartTest = (
     nextDifficulty: DifficultyKey,
-    _level: 'level1' | 'level2' | 'level3'
+    _level: LessonLevelKey
   ) => {
     setActiveLesson(null);
     setActiveTab('practice');
@@ -311,6 +337,7 @@ export function useSessionCoordinator({
     lessonsLoading,
     showLessonComplete,
     setShowLessonComplete,
+    isAdvancingExercise,
     personalBest,
     focusInput,
     onInputChange,

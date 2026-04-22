@@ -24,7 +24,10 @@ export function useUserLearningData(user: User | null) {
     const savedHistory = localStorage.getItem(`swifttype_history_${user.uid}`);
     if (savedHistory) {
       try {
-        setHistory(JSON.parse(savedHistory) as SessionResult[]);
+        const parsedHistory = JSON.parse(savedHistory) as SessionResult[];
+        const normalizedHistory = normalizeHistory(parsedHistory);
+        setHistory(normalizedHistory);
+        localStorage.setItem(`swifttype_history_${user.uid}`, JSON.stringify(normalizedHistory));
       } catch {
         setHistory([]);
       }
@@ -57,10 +60,11 @@ export function useUserLearningData(user: User | null) {
   }, [user]);
 
   const persistHistory = useCallback((nextHistory: SessionResult[]) => {
-    setHistory(nextHistory);
+    const normalizedHistory = normalizeHistory(nextHistory);
+    setHistory(normalizedHistory);
 
     if (user) {
-      localStorage.setItem(`swifttype_history_${user.uid}`, JSON.stringify(nextHistory));
+      localStorage.setItem(`swifttype_history_${user.uid}`, JSON.stringify(normalizedHistory));
     }
   }, [user]);
 
@@ -75,4 +79,31 @@ export function useUserLearningData(user: User | null) {
     progressLoading,
     lessonsLoading,
   };
+}
+
+function normalizeHistory(history: SessionResult[]) {
+  const sortedHistory = [...history].sort(
+    (left, right) => new Date(left.date).getTime() - new Date(right.date).getTime()
+  );
+
+  return sortedHistory.filter((session, index, sessions) => {
+    if (index === 0) return true;
+
+    const previous = sessions[index - 1];
+    const timeGap = Math.abs(new Date(session.date).getTime() - new Date(previous.date).getTime());
+    const looksDuplicated =
+      timeGap < 5000 &&
+      session.wpm === previous.wpm &&
+      session.accuracy === previous.accuracy &&
+      session.errors === previous.errors &&
+      session.timeTaken === previous.timeTaken &&
+      session.mode === previous.mode &&
+      session.difficulty === previous.difficulty &&
+      session.lessonContext?.difficulty === previous.lessonContext?.difficulty &&
+      session.lessonContext?.level === previous.lessonContext?.level &&
+      session.lessonContext?.lessonNum === previous.lessonContext?.lessonNum &&
+      session.lessonContext?.exerciseNum === previous.lessonContext?.exerciseNum;
+
+    return !looksDuplicated;
+  });
 }

@@ -100,6 +100,26 @@ export function useTypingEngine(
     if (timerRef.current) clearInterval(timerRef.current);
   }, [generateText, mode, timeLimit]);
 
+  const loadText = useCallback((nextText: string) => {
+    setState({
+      text: nextText,
+      userInput: '',
+      isStarted: false,
+      isFinished: false,
+      sessionEndReason: null,
+      timeLeft: mode === 'Time Attack' ? timeLimit : 0,
+      startTime: null,
+      errors: 0,
+      missedKeys: {},
+      correctChars: 0,
+      duration: null,
+    });
+
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+  }, [mode, timeLimit]);
+
   useEffect(() => {
     reset();
   }, [reset]);
@@ -200,6 +220,7 @@ export function useTypingEngine(
     accuracy: currentAccuracy,
     handleInput,
     reset,
+    loadText,
     timeElapsed: elapsed
   };
 }
