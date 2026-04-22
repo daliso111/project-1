@@ -25,8 +25,7 @@ export function useTypingEngine(
   timeLimit: TimeLimit,
   selectedLanguage: string = 'All',
   punctMode: boolean = false,
-  customText: string = '',
-  supabaseText?: string
+  customText: string = ''
 ) {
   const [state, setState] = useState<TypingState>({
     text: '',
@@ -44,11 +43,6 @@ export function useTypingEngine(
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const generateText = useCallback(() => {
-    // If supabaseText is provided, use it directly
-    if (supabaseText) {
-      return supabaseText;
-    }
-
     let result = '';
     if (mode === 'Code') {
       const filtered = selectedLanguage === 'All' 
@@ -82,7 +76,7 @@ export function useTypingEngine(
     }
 
     return result;
-  }, [mode, difficulty, selectedLanguage, punctMode, customText, supabaseText]);
+  }, [mode, difficulty, selectedLanguage, punctMode, customText]);
 
   const reset = useCallback((keepText: boolean = false) => {
     setState(prev => {

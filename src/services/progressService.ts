@@ -44,7 +44,7 @@ export const completeExercise = async (
   difficulty: DifficultyKey,
   level: 'level1' | 'level2' | 'level3',
   lessonNum: number
-): Promise<{ lessonCompleted: boolean; allLessonsCompleted: boolean }> => {
+): Promise<{ lessonCompleted: boolean; allLessonsCompleted: boolean; nextExerciseNumber: number }> => {
   const docRef = doc(db, 'progress', userId);
   const docSnap = await getDoc(docRef);
   const current = docSnap.exists() ? docSnap.data() as UserProgress : DEFAULT_PROGRESS;
@@ -77,7 +77,8 @@ export const completeExercise = async (
 
   return {
     lessonCompleted,
-    allLessonsCompleted: newLessonsCompleted >= 5
+    allLessonsCompleted: newLessonsCompleted >= 5,
+    nextExerciseNumber: Math.min(newExercises + 1, 3)
   };
 };
 
