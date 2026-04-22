@@ -131,6 +131,11 @@ export default function App() {
 
   const adaptedLevel = useAdaptiveDifficulty(history);
   const effectiveDifficulty = difficulty === 'Adaptive' ? adaptedLevel : difficulty;
+  const headerActiveTab =
+    activeTab === 'practice' && activeLesson ? 'learn' : activeTab;
+  const headerMode =
+    activeTab === 'practice' && activeLesson ? 'Word Sprint' : mode;
+  const latestSessionMissedKeys = history.length > 0 ? history[history.length - 1].missedKeys : missedKeys;
 
   return (
     <>
@@ -147,7 +152,7 @@ export default function App() {
                 streak={streak}
                 isStarted={isStarted}
                 isFinished={isFinished}
-                mode={mode}
+                mode={headerMode}
                 setMode={setMode}
                 setIsCustomModalOpen={setIsCustomModalOpen}
                 selectedLanguage={selectedLanguage}
@@ -158,7 +163,7 @@ export default function App() {
                 setVolume={setVolume}
                 theme={theme}
                 setTheme={setTheme}
-                activeTab={activeTab}
+                activeTab={headerActiveTab}
                 setActiveTab={setActiveTab}
                 user={user}
                 handleLogout={() => handleLogout(() => setHistory([]))}
@@ -204,7 +209,7 @@ export default function App() {
                 history={history}
                 user={user}
                 unlockedIds={unlockedIds}
-                missedKeys={missedKeys}
+                missedKeys={latestSessionMissedKeys}
                 activeLesson={
                   activeLesson
                     ? {
