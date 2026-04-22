@@ -46,10 +46,10 @@ export function LessonPerformanceCharts({
     );
   });
 
-  const exerciseChartData = buildExerciseChartData(lessonResults);
   const lessonAverageData = buildLessonAverageData(lessonResults);
-  const hasLessonData = exerciseChartData.some((point) => point.wpm !== null);
-  const hasAverageData = lessonAverageData.some((point) => point.averageWpm !== null);
+  const hasAverageData = lessonAverageData.some(
+    (point) => point.averageWpm !== null || point.partialAverageWpm !== null
+  );
 
   return (
     <div className="space-y-6">
@@ -57,71 +57,14 @@ export function LessonPerformanceCharts({
         <div className="flex justify-between items-center mb-6">
           <div>
             <h3 className="text-[13px] font-semibold text-text-dim uppercase tracking-wider">
-              Exercise WPM
-            </h3>
-            <p className="text-[11px] text-text-dim/60 mt-1">
-              {formatTrackLabel(currentTrack)} exercise-by-exercise speed
-            </p>
-          </div>
-          <span className="text-[11px] text-text-dim/60 font-medium tracking-tight">
-            Up to 15 exercises
-          </span>
-        </div>
-        {hasLessonData ? (
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={exerciseChartData}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff0a" />
-              <XAxis
-                dataKey="label"
-                stroke="#94a3b8"
-                fontSize={10}
-                tickLine={false}
-                axisLine={false}
-                interval={0}
-                angle={-35}
-                textAnchor="end"
-                height={56}
-                tickMargin={12}
-              />
-              <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} domain={['dataMin - 5', 'dataMax + 5']} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1e293b',
-                  borderRadius: '8px',
-                  border: '1px solid #334155',
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                }}
-                itemStyle={{ fontSize: '12px', color: '#f8fafc' }}
-                formatter={(value: number | null) => (value === null ? 'Not done' : `${value} WPM`)}
-              />
-              <Line
-                type="monotone"
-                dataKey="wpm"
-                stroke="#3b82f6"
-                strokeWidth={2}
-                dot={{ fill: '#3b82f6', r: 3 }}
-                activeDot={{ r: 5, fill: '#3b82f6' }}
-                connectNulls={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        ) : (
-          <EmptyPanelMessage message="No lesson exercise speeds recorded for this level yet." />
-        )}
-      </div>
-
-      <div className="bg-surface border border-border-theme rounded-xl p-6">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h3 className="text-[13px] font-semibold text-text-dim uppercase tracking-wider">
               Lesson Average WPM
             </h3>
             <p className="text-[11px] text-text-dim/60 mt-1">
-              Average of all 3 exercises per lesson
+              {formatTrackLabel(currentTrack)} average of all 3 exercises per lesson
             </p>
           </div>
           <span className="text-[11px] text-text-dim/60 font-medium tracking-tight">
-            Incomplete lessons stay empty
+            5 lessons
           </span>
         </div>
         {hasAverageData ? (
@@ -172,30 +115,6 @@ export function LessonPerformanceCharts({
       </div>
     </div>
   );
-}
-
-function buildExerciseChartData(history: SessionResult[]) {
-  const bestResults = new Map<string, number>();
-
-  history.forEach((session) => {
-    const context = session.lessonContext;
-    if (!context) return;
-
-    const key = `${context.lessonNum}-${context.exerciseNum}`;
-    const current = bestResults.get(key) ?? 0;
-    bestResults.set(key, Math.max(current, session.wpm));
-  });
-
-  return Array.from({ length: TOTAL_LESSONS * EXERCISES_PER_LESSON }, (_, index) => {
-    const lessonNum = Math.floor(index / EXERCISES_PER_LESSON) + 1;
-    const exerciseNum = (index % EXERCISES_PER_LESSON) + 1;
-    const key = `${lessonNum}-${exerciseNum}`;
-
-    return {
-      label: `L${lessonNum}-E${exerciseNum}`,
-      wpm: bestResults.get(key) ?? null,
-    };
-  });
 }
 
 function buildLessonAverageData(history: SessionResult[]) {
@@ -374,8 +293,8 @@ function IncompleteLessonDot(props: any) {
 
   return (
     <g>
-      <circle cx={cx} cy={cy} r={5} fill="#0f172a" stroke="#94a3b8" strokeWidth={2} />
-      <circle cx={cx} cy={cy} r={2} fill="#94a3b8" />
+      <circle cx={cx} cy={cy} r={5} fill="#0f172a" stroke="#22c55e" strokeWidth={2} />
+      <circle cx={cx} cy={cy} r={2} fill="#22c55e" />
     </g>
   );
 }

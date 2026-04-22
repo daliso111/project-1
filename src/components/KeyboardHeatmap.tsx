@@ -12,7 +12,17 @@ const KEYBOARD_LAYOUT = [
 ];
 
 export function KeyboardHeatmap({ missedKeys }: KeyboardHeatmapProps) {
-  const maxMissed = Math.max(...Object.values(missedKeys), 0);
+  const normalizedMissedKeys = Object.entries(missedKeys).reduce<Record<string, number>>((acc, [key, count]) => {
+    const normalizedKey = key.trim().toLowerCase();
+    if (!/^[a-z]$/.test(normalizedKey)) {
+      return acc;
+    }
+
+    acc[normalizedKey] = (acc[normalizedKey] || 0) + count;
+    return acc;
+  }, {});
+
+  const maxMissed = Math.max(...Object.values(normalizedMissedKeys), 0);
 
   return (
     <div className="bg-surface border border-border-theme p-6 rounded-xl">
@@ -24,7 +34,7 @@ export function KeyboardHeatmap({ missedKeys }: KeyboardHeatmapProps) {
         {KEYBOARD_LAYOUT.map((row, i) => (
           <div key={i} className="flex gap-1 justify-center">
             {row.map(key => {
-              const count = missedKeys[key] || 0;
+              const count = normalizedMissedKeys[key] || 0;
               const intensity = maxMissed > 0 ? (count / maxMissed) : 0;
               
               let heatClass = "";

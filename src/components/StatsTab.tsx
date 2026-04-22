@@ -64,7 +64,7 @@ export function StatsTab({
           </div>
 
           <DailyGoals history={history} userId={user.uid} />
-          <Suspense fallback={<StatsPanelFallback className="h-[34rem]" />}>
+          <Suspense fallback={<StatsPanelFallback className="h-80" />}>
             <LessonPerformanceCharts history={history} activeLesson={activeLesson} />
           </Suspense>
           <BadgeGrid unlockedIds={unlockedIds} />
