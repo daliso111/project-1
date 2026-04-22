@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { auth } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { isLoggingInRef } from '../App';
+import { isLoggingInRef } from '../hooks/useAuthSession';
 import { toast } from 'react-hot-toast';
 import { LogIn, Mail, Lock, ArrowRight } from 'lucide-react';
 
