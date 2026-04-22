@@ -43,7 +43,8 @@ export const completeExercise = async (
   userId: string,
   difficulty: DifficultyKey,
   level: 'level1' | 'level2' | 'level3',
-  lessonNum: number
+  lessonNum: number,
+  exerciseNum: number
 ): Promise<{ lessonCompleted: boolean; allLessonsCompleted: boolean; nextExerciseNumber: number }> => {
   const docRef = doc(db, 'progress', userId);
   const docSnap = await getDoc(docRef);
@@ -51,7 +52,7 @@ export const completeExercise = async (
 
   const levelProgress = current[difficulty][level];
   const currentExercises = levelProgress.lessonExercises?.[lessonNum] ?? 0;
-  const newExercises = Math.min(currentExercises + 1, EXERCISES_PER_LESSON);
+  const newExercises = Math.min(Math.max(currentExercises, exerciseNum), EXERCISES_PER_LESSON);
   const lessonCompleted = newExercises >= EXERCISES_PER_LESSON;
 
   const newLessonsCompleted = lessonCompleted && lessonNum > levelProgress.lessonsCompleted

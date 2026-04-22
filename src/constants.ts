@@ -12,6 +12,9 @@ export interface SessionResult {
   difficulty: Difficulty;
   date: string;
   missedKeys: Record<string, number>;
+  level?: 'level1' | 'level2' | 'level3';
+  lessonNum?: number;
+  exerciseNum?: number;
 }
 
 export const QUOTES = {

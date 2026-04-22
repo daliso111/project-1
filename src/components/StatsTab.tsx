@@ -4,6 +4,8 @@ import { User } from 'firebase/auth';
 import { SessionResult } from '../constants';
 import { DailyGoals } from './DailyGoals';
 import { HistoryChart } from './HistoryChart';
+import { ExerciseWpmChart } from './ExerciseWpmChart';
+import { LessonAverageChart } from './LessonAverageChart';
 import { BadgeGrid } from './BadgeGrid';
 import { KeyboardHeatmap } from './KeyboardHeatmap';
 
@@ -52,6 +54,12 @@ export function StatsTab({
           </div>
 
           <DailyGoals history={history} userId={user.uid} />
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <ExerciseWpmChart history={history} />
+            <LessonAverageChart history={history} />
+          </div>
+
           <HistoryChart history={history} />
           <BadgeGrid unlockedIds={unlockedIds} />
           <KeyboardHeatmap missedKeys={missedKeys} />
