@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Difficulty, PracticeMode, TimeLimit } from './constants';
 import { useTypingEngine } from './hooks/useTypingEngine';
@@ -12,13 +12,20 @@ import { DifficultyKey } from './services/progressService';
 import { AuthGate } from './components/AuthGate';
 import { AppShell } from './components/AppShell';
 import { Header } from './components/Header';
-import { LearningPath } from './components/LearningPath';
-import { PracticeTab } from './components/PracticeTab';
-import { StatsTab } from './components/StatsTab';
 import { ResultsModal } from './components/ResultsModal';
 import { CustomTextModal } from './components/CustomTextModal';
 import { LessonCompleteModal } from './components/LessonCompleteModal';
 import { useSessionCoordinator } from './hooks/useSessionCoordinator';
+
+const LearningPath = lazy(() =>
+  import('./components/LearningPath').then((module) => ({ default: module.LearningPath }))
+);
+const PracticeTab = lazy(() =>
+  import('./components/PracticeTab').then((module) => ({ default: module.PracticeTab }))
+);
+const StatsTab = lazy(() =>
+  import('./components/StatsTab').then((module) => ({ default: module.StatsTab }))
+);
 
 type ActiveTab = 'practice' | 'stats' | 'learn';
 type ActiveLesson = {
@@ -155,45 +162,47 @@ export default function App() {
             )
           }
         >
-          {user && activeTab === 'learn' && (
-            <LearningPath
-              progress={userProgress}
-              isLoading={progressLoading}
-              onStartLesson={handleStartLesson}
-              onStartTest={handleStartTest}
-            />
-          )}
+          <Suspense fallback={<TabSectionFallback />}>
+            {user && activeTab === 'learn' && (
+              <LearningPath
+                progress={userProgress}
+                isLoading={progressLoading}
+                onStartLesson={handleStartLesson}
+                onStartTest={handleStartTest}
+              />
+            )}
 
-          {user && activeTab === 'practice' && (
-            <PracticeTab
-              lessons={lessons}
-              effectiveDifficulty={effectiveDifficulty}
-              lessonsLoading={lessonsLoading}
-              wpm={wpm}
-              accuracy={accuracy}
-              timeLeft={timeLeft}
-              errors={errors}
-              userInput={userInput}
-              isFinished={isFinished}
-              text={text}
-              onInputChange={onInputChange}
-              focusInput={focusInput}
-              inputRef={inputRef}
-              isStarted={isStarted}
-              reset={reset}
-            />
-          )}
+            {user && activeTab === 'practice' && (
+              <PracticeTab
+                lessons={lessons}
+                effectiveDifficulty={effectiveDifficulty}
+                lessonsLoading={lessonsLoading}
+                wpm={wpm}
+                accuracy={accuracy}
+                timeLeft={timeLeft}
+                errors={errors}
+                userInput={userInput}
+                isFinished={isFinished}
+                text={text}
+                onInputChange={onInputChange}
+                focusInput={focusInput}
+                inputRef={inputRef}
+                isStarted={isStarted}
+                reset={reset}
+              />
+            )}
 
-          {user && activeTab === 'stats' && (
-            <StatsTab
-              streak={streak}
-              personalBest={personalBest}
-              history={history}
-              user={user}
-              unlockedIds={unlockedIds}
-              missedKeys={missedKeys}
-            />
-          )}
+            {user && activeTab === 'stats' && (
+              <StatsTab
+                streak={streak}
+                personalBest={personalBest}
+                history={history}
+                user={user}
+                unlockedIds={unlockedIds}
+                missedKeys={missedKeys}
+              />
+            )}
+          </Suspense>
         </AppShell>
 
         <CustomTextModal
@@ -230,5 +239,19 @@ export default function App() {
       </AuthGate>
       <Toaster />
     </>
+  );
+}
+
+function TabSectionFallback() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="h-24 rounded-2xl border border-border-theme bg-surface/60" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="h-28 rounded-2xl border border-border-theme bg-surface/60" />
+        ))}
+      </div>
+      <div className="h-80 rounded-2xl border border-border-theme bg-surface/60" />
+    </div>
   );
 }
