@@ -102,13 +102,23 @@ export function useSessionCoordinator({
   } = useUserLearningData(user);
 
   const historyRef = useRef(history);
+  const hasProcessedFinishedSessionRef = useRef(false);
 
   useEffect(() => {
     historyRef.current = history;
   }, [history]);
 
   useEffect(() => {
-    if (!isFinished) return;
+    if (!isFinished) {
+      hasProcessedFinishedSessionRef.current = false;
+      return;
+    }
+
+    if (hasProcessedFinishedSessionRef.current) {
+      return;
+    }
+
+    hasProcessedFinishedSessionRef.current = true;
 
     playComplete();
 
