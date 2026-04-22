@@ -65,10 +65,6 @@ export function StatsTab({
 
           <DailyGoals history={history} userId={user.uid} />
 
-          <Suspense fallback={<StatsPanelFallback className="h-[34rem]" />}>
-            <LessonPerformanceCharts history={history} activeLesson={activeLesson} />
-          </Suspense>
-
           <BadgeGrid unlockedIds={unlockedIds} />
           <Suspense fallback={<StatsPanelFallback className="h-56" />}>
             <KeyboardHeatmap missedKeys={missedKeys} />

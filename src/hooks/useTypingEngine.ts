@@ -112,7 +112,6 @@ export function useTypingEngine(
       errors: 0,
       missedKeys: {},
       correctChars: 0,
-      duration: null,
     });
 
     if (timerRef.current) {

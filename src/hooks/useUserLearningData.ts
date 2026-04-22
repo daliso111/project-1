@@ -59,7 +59,7 @@ export function useUserLearningData(user: User | null) {
     }
   }, [user]);
 
-  const persistHistory = useCallback((nextHistory: SessionResult[]) => {
+
     const normalizedHistory = normalizeHistory(nextHistory);
     setHistory(normalizedHistory);
 

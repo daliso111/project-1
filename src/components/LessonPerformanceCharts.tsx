@@ -90,7 +90,6 @@ export function LessonPerformanceCharts({
                 strokeWidth={2}
                 dot={{ fill: '#3b82f6', r: 3 }}
                 activeDot={{ r: 5, fill: '#3b82f6' }}
-                connectNulls={true}
               />
             </LineChart>
           </ResponsiveContainer>

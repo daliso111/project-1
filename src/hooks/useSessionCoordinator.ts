@@ -197,6 +197,12 @@ export function useSessionCoordinator({
             });
             setCustomText(nextText);
             setLessonText(nextText);
+            setActiveLesson({
+              difficulty: activeLesson.difficulty,
+              level: activeLesson.level,
+              lessonNum: activeLesson.lessonNum,
+              exerciseNum: nextExerciseNumber,
+            });
             setMode('Custom');
             loadText(nextText);
           }
@@ -298,7 +304,7 @@ export function useSessionCoordinator({
       difficulty: nextDifficulty,
       level,
       lessonNum: lesson,
-      exerciseNum: exerciseNumber,
+
     });
     setActiveTab('practice');
     setDifficulty(toDisplayDifficulty(nextDifficulty));
