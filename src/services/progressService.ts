@@ -9,6 +9,7 @@ export interface LevelProgress {
   testPassed: boolean;
   testWpm: number;
   testAccuracy: number;
+  tutorialWatched: boolean;
 }
 
 export interface UserProgress {
@@ -34,7 +35,8 @@ export const DEFAULT_LEVEL_PROGRESS: LevelProgress = {
   lessonExercises: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
   testPassed: false,
   testWpm: 0,
-  testAccuracy: 0
+  testAccuracy: 0,
+  tutorialWatched: false
 };
 
 export const EXERCISES_PER_LESSON = 3;
@@ -115,6 +117,29 @@ export const getUserProgress = async (userId: string): Promise<UserProgress> => 
     await setDoc(docRef, DEFAULT_PROGRESS);
     return DEFAULT_PROGRESS;
   }
+};
+
+export const markTutorialAsWatched = async (
+  userId: string,
+  difficulty: DifficultyKey,
+  level: 'level1' | 'level2' | 'level3'
+): Promise<void> => {
+  const docRef = doc(db, 'progress', userId);
+  const docSnap = await getDoc(docRef);
+  const current = docSnap.exists() ? docSnap.data() as UserProgress : DEFAULT_PROGRESS;
+
+  const updated = {
+    ...current,
+    [difficulty]: {
+      ...current[difficulty],
+      [level]: {
+        ...current[difficulty][level],
+        tutorialWatched: true
+      }
+    }
+  };
+
+  await setDoc(docRef, updated);
 };
 
 export const updateLevelProgress = async (

@@ -12,6 +12,7 @@ interface LearningPathProps {
   isLoading: boolean;
   onStartLesson: (difficulty: DifficultyKey, level: 'level1' | 'level2' | 'level3', lesson: number) => void;
   onStartTest: (difficulty: DifficultyKey, level: 'level1' | 'level2' | 'level3') => void;
+  onWatchTutorial: (difficulty: DifficultyKey, level: 'level1' | 'level2' | 'level3') => void;
 }
 
 const DIFFICULTIES: { key: DifficultyKey; label: string; color: string; activeClass: string }[] = [
@@ -60,7 +61,7 @@ function ProgressRing({ exercises, total = 3, size = 64, color = '#3b82f6' }: {
   );
 }
 
-export function LearningPath({ progress, lessons, isLoading, onStartLesson, onStartTest }: LearningPathProps) {
+export function LearningPath({ progress, lessons, isLoading, onStartLesson, onStartTest, onWatchTutorial }: LearningPathProps) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyKey>('beginner');
 
   if (isLoading) {
@@ -136,21 +137,26 @@ export function LearningPath({ progress, lessons, isLoading, onStartLesson, onSt
                 </div>
 
                 {/* Tutorial Button */}
-                <div className="flex justify-center">
+                <div className="flex flex-col gap-2">
                   {unlocked && lessons?.[selectedDifficulty]?.[level] ? (
                     <a
                       href={lessons[selectedDifficulty][level].videoUrl || '#'}
+                      onClick={() => onWatchTutorial(selectedDifficulty, level)}
                       target={lessons[selectedDifficulty][level].videoUrl ? "_blank" : undefined}
                       rel="noopener noreferrer"
                       className={cn(
                         "w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 border",
                         lessons[selectedDifficulty][level].videoUrl
-                          ? "bg-accent-blue/10 text-accent-blue border-accent-blue/20 hover:bg-accent-blue/20"
+                          ? levelProgress.tutorialWatched
+                            ? "bg-accent-green/10 text-accent-green border-accent-green/20"
+                            : "bg-accent-blue/10 text-accent-blue border-accent-blue/20 hover:bg-accent-blue/20 animate-pulse-subtle"
                           : "bg-surface border-border-theme text-text-dim cursor-not-allowed opacity-50"
                       )}
                     >
-                      <BookOpen size={14} />
-                      {lessons[selectedDifficulty][level].videoUrl ? 'Tutorial' : 'No Tutorial'}
+                      {levelProgress.tutorialWatched ? <CheckCircle size={14} /> : <BookOpen size={14} />}
+                      {lessons[selectedDifficulty][level].videoUrl
+                        ? levelProgress.tutorialWatched ? 'Tutorial Watched' : 'Watch Tutorial First'
+                        : 'No Tutorial'}
                     </a>
                   ) : (
                     <div className="w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-2 border border-border-theme bg-surface text-text-dim opacity-50">
@@ -162,14 +168,20 @@ export function LearningPath({ progress, lessons, isLoading, onStartLesson, onSt
 
                 {/* Lessons as circular nodes */}
                 <div className="flex flex-col items-center gap-2">
+                  {!levelProgress.tutorialWatched && unlocked && (
+                    <p className="text-[9px] font-bold text-accent-blue uppercase tracking-tighter mb-2 animate-bounce">
+                      ↑ Watch Tutorial to Unlock
+                    </p>
+                  )}
                   {[1, 2, 3, 4, 5].map((lessonNum) => {
                     const completed = lessonNum <= levelProgress.lessonsCompleted;
                     const isCurrent = lessonNum === levelProgress.lessonsCompleted + 1;
+                    const isAccessible = unlocked && levelProgress.tutorialWatched && (completed || isCurrent);
 
                     return (
                       <div key={lessonNum} className="flex flex-col items-center">
                         <button
-                          disabled={!unlocked || (!completed && !isCurrent)}
+                          disabled={!isAccessible}
                           onClick={() => onStartLesson(selectedDifficulty, level, lessonNum)}
                           className={cn(
                             "w-16 h-16 rounded-full flex flex-col items-center justify-center transition-all relative",
