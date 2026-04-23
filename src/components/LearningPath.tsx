@@ -153,24 +153,19 @@ export function LearningPath({ progress, lessons, isLoading, onStartLesson, onSt
                     >
                       <BookOpen size={14} />
                       {lessons[selectedDifficulty][level].videoUrl
-                        ? levelProgress.tutorialWatched ? 'Tutorial' : 'Start Here: Tutorial'
+                        ? '[Start Here]'
                         : 'No Tutorial'}
                     </a>
                   ) : (
-                    <div className="w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-2 border border-border-theme bg-surface text-text-dim opacity-50">
+                    <div className="w-full py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-2 border border-border-theme bg-surface text-text-dim opacity-50">
                       <Lock size={14} />
-                      Tutorial Locked
+                      [Tutorial Locked]
                     </div>
                   )}
                 </div>
 
                 {/* Lessons as circular nodes */}
                 <div className="flex flex-col items-center gap-2">
-                  {!levelProgress.tutorialWatched && unlocked && (
-                    <p className="text-[9px] font-bold text-accent-amber uppercase tracking-tighter mb-2 animate-bounce">
-                      ↑ Required First
-                    </p>
-                  )}
                   {[1, 2, 3, 4, 5].map((lessonNum) => {
                     const completed = lessonNum <= levelProgress.lessonsCompleted;
                     const isCurrent = lessonNum === levelProgress.lessonsCompleted + 1;
