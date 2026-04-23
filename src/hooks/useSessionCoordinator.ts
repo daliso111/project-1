@@ -7,6 +7,7 @@ import {
   DifficultyKey,
   completeExercise,
   markTutorialAsWatched,
+  EXERCISES_PER_LESSON,
 } from '../services/progressService';
 import { getLessonText } from '../services/contentService';
 import { SessionEndReason } from './useTypingEngine';
@@ -171,10 +172,12 @@ export function useSessionCoordinator({
         activeLesson.level,
         activeLesson.lessonNum
       )
-        .then(async ({ lessonCompleted, nextExerciseNumber }) => {
+        .then(async ({ nextExerciseNumber }) => {
           await refreshUserProgress();
 
-          if (lessonCompleted) {
+          const isLastExercise = activeLesson.exerciseNum >= EXERCISES_PER_LESSON;
+
+          if (isLastExercise) {
             setIsAdvancingExercise(false);
             setShowLessonComplete(true);
             setActiveLesson(null);
@@ -292,19 +295,23 @@ export function useSessionCoordinator({
     lesson: number
   ) => {
     const currentProgress = userProgress?.[nextDifficulty]?.[level];
-    const exerciseNumber = (currentProgress?.lessonExercises?.[lesson] ?? 0) + 1;
+    const completedExercises = currentProgress?.lessonExercises?.[lesson] ?? 0;
+
+    // If the lesson is fully completed, start from exercise 1 for revision
+    // otherwise, start from the next uncompleted exercise
+    const exerciseNumber = completedExercises >= EXERCISES_PER_LESSON ? 1 : completedExercises + 1;
 
     setActiveLesson({
       difficulty: nextDifficulty,
       level,
       lessonNum: lesson,
-      exerciseNum: Math.min(exerciseNumber, 3),
+      exerciseNum: exerciseNumber,
     });
     setActiveTab('practice');
     setDifficulty(toDisplayDifficulty(nextDifficulty));
     setIsAdvancingExercise(true);
 
-    getLessonText(nextDifficulty, level, lesson, Math.min(exerciseNumber, 3))
+    getLessonText(nextDifficulty, level, lesson, exerciseNumber)
       .then((nextText) => {
         if (!nextText) return;
         setLessonText(nextText);
