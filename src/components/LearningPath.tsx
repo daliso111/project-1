@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Lock, CheckCircle, PlayCircle, Trophy } from 'lucide-react';
+import { Lock, CheckCircle, PlayCircle, Trophy, BookOpen } from 'lucide-react';
 import { UserProgress, isLevelUnlocked, PASS_THRESHOLDS, DifficultyKey } from '../services/progressService';
+import { LessonKey, Lesson } from '../services/lessonService';
+import { LessonLevelKey } from '../constants';
 import { cn } from '../lib/utils';
 
 interface LearningPathProps {
   progress: UserProgress | null;
+  lessons: Record<LessonKey, Record<LessonLevelKey, Lesson>> | null;
   isLoading: boolean;
   onStartLesson: (difficulty: DifficultyKey, level: 'level1' | 'level2' | 'level3', lesson: number) => void;
   onStartTest: (difficulty: DifficultyKey, level: 'level1' | 'level2' | 'level3') => void;
@@ -57,7 +60,7 @@ function ProgressRing({ exercises, total = 3, size = 64, color = '#3b82f6' }: {
   );
 }
 
-export function LearningPath({ progress, isLoading, onStartLesson, onStartTest }: LearningPathProps) {
+export function LearningPath({ progress, lessons, isLoading, onStartLesson, onStartTest }: LearningPathProps) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyKey>('beginner');
 
   if (isLoading) {
@@ -130,6 +133,31 @@ export function LearningPath({ progress, isLoading, onStartLesson, onStartTest }
                   ) : levelProgress.testPassed ? (
                     <CheckCircle size={14} className="text-accent-green" />
                   ) : null}
+                </div>
+
+                {/* Tutorial Button */}
+                <div className="flex justify-center">
+                  {unlocked && lessons?.[selectedDifficulty]?.[level] ? (
+                    <a
+                      href={lessons[selectedDifficulty][level].videoUrl || '#'}
+                      target={lessons[selectedDifficulty][level].videoUrl ? "_blank" : undefined}
+                      rel="noopener noreferrer"
+                      className={cn(
+                        "w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 border",
+                        lessons[selectedDifficulty][level].videoUrl
+                          ? "bg-accent-blue/10 text-accent-blue border-accent-blue/20 hover:bg-accent-blue/20"
+                          : "bg-surface border-border-theme text-text-dim cursor-not-allowed opacity-50"
+                      )}
+                    >
+                      <BookOpen size={14} />
+                      {lessons[selectedDifficulty][level].videoUrl ? 'Tutorial' : 'No Tutorial'}
+                    </a>
+                  ) : (
+                    <div className="w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-2 border border-border-theme bg-surface text-text-dim opacity-50">
+                      <Lock size={14} />
+                      Tutorial Locked
+                    </div>
+                  )}
                 </div>
 
                 {/* Lessons as circular nodes */}

@@ -3,10 +3,11 @@ import { User } from 'firebase/auth';
 import { SessionResult } from '../constants';
 import { Lesson, LessonKey, getLessons } from '../services/lessonService';
 import { UserProgress, getUserProgress } from '../services/progressService';
+import { LessonLevelKey } from '../constants';
 
 export function useUserLearningData(user: User | null) {
   const [history, setHistory] = useState<SessionResult[]>([]);
-  const [lessons, setLessons] = useState<Record<LessonKey, Lesson> | null>(null);
+  const [lessons, setLessons] = useState<Record<LessonKey, Record<LessonLevelKey, Lesson>> | null>(null);
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [progressLoading, setProgressLoading] = useState(true);
   const [lessonsLoading, setLessonsLoading] = useState(true);
