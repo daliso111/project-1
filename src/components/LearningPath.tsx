@@ -145,17 +145,15 @@ export function LearningPath({ progress, lessons, isLoading, onStartLesson, onSt
                       target={lessons[selectedDifficulty][level].videoUrl ? "_blank" : undefined}
                       rel="noopener noreferrer"
                       className={cn(
-                        "w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 border",
+                        "w-full py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 border shadow-lg",
                         lessons[selectedDifficulty][level].videoUrl
-                          ? levelProgress.tutorialWatched
-                            ? "bg-accent-green/10 text-accent-green border-accent-green/20"
-                            : "bg-accent-blue/10 text-accent-blue border-accent-blue/20 hover:bg-accent-blue/20 animate-pulse-subtle"
+                          ? "bg-accent-amber/10 text-accent-amber border-accent-amber/30 hover:bg-accent-amber/20 animate-pulse-subtle"
                           : "bg-surface border-border-theme text-text-dim cursor-not-allowed opacity-50"
                       )}
                     >
-                      {levelProgress.tutorialWatched ? <CheckCircle size={14} /> : <BookOpen size={14} />}
+                      <BookOpen size={14} />
                       {lessons[selectedDifficulty][level].videoUrl
-                        ? levelProgress.tutorialWatched ? 'Tutorial Watched' : 'Watch Tutorial First'
+                        ? levelProgress.tutorialWatched ? 'Tutorial' : 'Start Here: Tutorial'
                         : 'No Tutorial'}
                     </a>
                   ) : (
@@ -169,8 +167,8 @@ export function LearningPath({ progress, lessons, isLoading, onStartLesson, onSt
                 {/* Lessons as circular nodes */}
                 <div className="flex flex-col items-center gap-2">
                   {!levelProgress.tutorialWatched && unlocked && (
-                    <p className="text-[9px] font-bold text-accent-blue uppercase tracking-tighter mb-2 animate-bounce">
-                      ↑ Watch Tutorial to Unlock
+                    <p className="text-[9px] font-bold text-accent-amber uppercase tracking-tighter mb-2 animate-bounce">
+                      ↑ Required First
                     </p>
                   )}
                   {[1, 2, 3, 4, 5].map((lessonNum) => {

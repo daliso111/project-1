@@ -10,6 +10,7 @@
   --accent-green: #10b981;
   --accent-red: #ef4444;
   --accent-blue: #3b82f6;
+  --accent-amber: #FFC857;
 }
 
 @theme {
@@ -24,6 +25,7 @@
   --color-accent-green: var(--accent-green);
   --color-accent-red: var(--accent-red);
   --color-accent-blue: var(--accent-blue);
+  --color-accent-amber: var(--accent-amber);
   
   --animate-blink: blink 1s step-end infinite;
 
