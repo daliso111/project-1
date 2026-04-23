@@ -92,6 +92,7 @@ export default function App() {
     onInputChange,
     handleStartLesson,
     handleStartTest,
+    handleWatchTutorial,
     setHistory,
     isAdvancingExercise,
   } = useSessionCoordinator({
@@ -179,6 +180,7 @@ export default function App() {
                 isLoading={progressLoading}
                 onStartLesson={handleStartLesson}
                 onStartTest={handleStartTest}
+                onWatchTutorial={handleWatchTutorial}
               />
             )}
 

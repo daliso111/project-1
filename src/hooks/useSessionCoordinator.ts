@@ -6,6 +6,7 @@ import { Difficulty, LessonLevelKey, PracticeMode, SessionResult, TimeLimit } fr
 import {
   DifficultyKey,
   completeExercise,
+  markTutorialAsWatched,
 } from '../services/progressService';
 import { getLessonText } from '../services/contentService';
 import { SessionEndReason } from './useTypingEngine';
@@ -342,6 +343,12 @@ export function useSessionCoordinator({
     onInputChange,
     handleStartLesson,
     handleStartTest,
+    handleWatchTutorial: async (diff: DifficultyKey, level: LessonLevelKey) => {
+      if (user) {
+        await markTutorialAsWatched(user.uid, diff, level);
+        await refreshUserProgress();
+      }
+    },
     setHistory,
   };
 }
