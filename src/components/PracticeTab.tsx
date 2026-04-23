@@ -2,12 +2,13 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { RotateCcw } from 'lucide-react';
 import { LessonCard } from './LessonCard';
-import { LessonKey, Lesson } from '../services/lessonService';
+import { Lesson } from '../services/lessonService';
 import { Difficulty } from '../constants';
 import { cn, formatTime } from '../lib/utils';
 
 interface PracticeTabProps {
-  lessons: Record<LessonKey, Lesson> | null;
+  currentLevelLesson: Lesson | null;
+  levelLabel?: string;
   effectiveDifficulty: Difficulty;
   lessonsLoading: boolean;
   wpm: number;
@@ -26,7 +27,8 @@ interface PracticeTabProps {
 }
 
 export function PracticeTab({
-  lessons,
+  currentLevelLesson,
+  levelLabel,
   effectiveDifficulty,
   lessonsLoading,
   wpm,
@@ -46,8 +48,9 @@ export function PracticeTab({
   return (
     <div className="space-y-6">
       <LessonCard
-        lesson={lessons ? lessons[effectiveDifficulty.toLowerCase() as LessonKey] ?? null : null}
+        lesson={currentLevelLesson}
         isLoading={lessonsLoading}
+        levelLabel={levelLabel}
       />
 
       <div className="grid grid-cols-4 gap-6">

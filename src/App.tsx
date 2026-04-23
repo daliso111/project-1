@@ -175,6 +175,7 @@ export default function App() {
             {user && activeTab === 'learn' && (
               <LearningPath
                 progress={userProgress}
+                lessons={lessons}
                 isLoading={progressLoading}
                 onStartLesson={handleStartLesson}
                 onStartTest={handleStartTest}
@@ -183,7 +184,16 @@ export default function App() {
 
             {user && activeTab === 'practice' && (
               <PracticeTab
-                lessons={lessons}
+                currentLevelLesson={
+                  activeLesson && lessons
+                    ? lessons[activeLesson.difficulty][activeLesson.level]
+                    : null
+                }
+                levelLabel={
+                  activeLesson
+                    ? `${activeLesson.difficulty} level ${activeLesson.level.slice(-1)}`
+                    : undefined
+                }
                 effectiveDifficulty={effectiveDifficulty}
                 lessonsLoading={lessonsLoading}
                 wpm={wpm}

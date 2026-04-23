@@ -1,12 +1,13 @@
 import { Lesson } from '../services/lessonService';
-import { PlayCircle, BookOpen } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 
 interface LessonCardProps {
   lesson: Lesson | null;
   isLoading: boolean;
+  levelLabel?: string;
 }
 
-export function LessonCard({ lesson, isLoading }: LessonCardProps) {
+export function LessonCard({ lesson, isLoading, levelLabel }: LessonCardProps) {
   if (isLoading) {
     return (
       <div className="bg-surface border border-border-theme rounded-xl p-6 animate-pulse">
@@ -26,29 +27,13 @@ export function LessonCard({ lesson, isLoading }: LessonCardProps) {
         </div>
         <div>
           <p className="text-[10px] font-bold text-text-dim uppercase tracking-widest mb-1">
-            {lesson.level} lesson
+            {levelLabel || 'lesson'}
           </p>
           <p className="text-[14px] font-bold text-text-main">{lesson.title}</p>
           <p className="text-[11px] text-text-dim mt-0.5">{lesson.description}</p>
         </div>
       </div>
 
-      {lesson.videoUrl ? (
-        <a
-          href={lesson.videoUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 px-4 py-2 bg-accent-blue text-white rounded-xl font-bold text-[12px] uppercase tracking-wider hover:brightness-110 transition-all whitespace-nowrap"
-        >
-          <PlayCircle size={16} />
-          Watch Lesson
-        </a>
-      ) : (
-        <div className="flex items-center gap-2 px-4 py-2 bg-surface border border-border-theme text-text-dim rounded-xl font-bold text-[12px] uppercase tracking-wider whitespace-nowrap">
-          <PlayCircle size={16} />
-          Coming Soon
-        </div>
-      )}
     </div>
   );
 }
