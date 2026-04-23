@@ -179,3 +179,19 @@ export const isLevelUnlocked = (
   const prevLevel = level === 'level2' ? 'level1' : 'level2';
   return progress[difficulty][prevLevel].testPassed;
 };
+
+export const isTutorialUnlocked = (
+  progress: UserProgress,
+  difficulty: DifficultyKey,
+  level: 'level1' | 'level2' | 'level3'
+): boolean => {
+  if (level === 'level1' && difficulty === 'beginner') return true;
+
+  if (level === 'level1') {
+    const prevDifficulty = difficulty === 'intermediate' ? 'beginner' : 'intermediate';
+    return progress[prevDifficulty].level3.tutorialWatched;
+  }
+
+  const prevLevel = level === 'level2' ? 'level1' : 'level2';
+  return progress[difficulty][prevLevel].tutorialWatched;
+};
