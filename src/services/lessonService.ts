@@ -16,51 +16,51 @@ export const DEFAULT_LESSONS: Record<LessonKey, Record<LessonLevelKey, Lesson>> 
     level1: {
       title: 'Home Row Mastery',
       description: 'Master the home row keys (ASDF JKL;)',
-      videoUrl: ''
+      videoUrl: 'https://www.youtube.com/watch?v=1ArVtHy5K2w'
     },
     level2: {
       title: 'Top Row Extension',
       description: 'Learn to reach for the top row keys (QWERTY UIOP)',
-      videoUrl: ''
+      videoUrl: 'https://www.youtube.com/watch?v=1ArVtHy5K2w'
     },
     level3: {
       title: 'Bottom Row Mastery',
       description: 'Complete the alphabet with the bottom row (ZXCV BNM,.)',
-      videoUrl: ''
+      videoUrl: 'https://www.youtube.com/watch?v=1ArVtHy5K2w'
     }
   },
   intermediate: {
     level1: {
       title: 'Number Row & Symbols',
       description: 'Incorporate numbers and common symbols into your typing.',
-      videoUrl: ''
+      videoUrl: 'https://www.youtube.com/watch?v=1ArVtHy5K2w'
     },
     level2: {
       title: 'Capitalization & Punctuation',
       description: 'Master Shift keys and advanced punctuation.',
-      videoUrl: ''
+      videoUrl: 'https://www.youtube.com/watch?v=1ArVtHy5K2w'
     },
     level3: {
       title: 'Speed Building Techniques',
       description: 'Learn techniques to increase your words per minute.',
-      videoUrl: ''
+      videoUrl: 'https://www.youtube.com/watch?v=1ArVtHy5K2w'
     }
   },
   advanced: {
     level1: {
       title: 'Programming Syntax',
       description: 'Master typing common programming brackets and symbols.',
-      videoUrl: ''
+      videoUrl: 'https://www.youtube.com/watch?v=1ArVtHy5K2w'
     },
     level2: {
       title: 'Complex Terminology',
       description: 'Practice with long and unusual words.',
-      videoUrl: ''
+      videoUrl: 'https://www.youtube.com/watch?v=1ArVtHy5K2w'
     },
     level3: {
       title: 'Full Mastery',
       description: 'The ultimate test of speed and accuracy.',
-      videoUrl: ''
+      videoUrl: 'https://www.youtube.com/watch?v=1ArVtHy5K2w'
     }
   }
 };
