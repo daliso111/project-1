@@ -145,19 +145,23 @@ export function LearningPath({ progress, lessons, isLoading, onStartLesson, onSt
                       target={lessons[selectedDifficulty][level].videoUrl ? "_blank" : undefined}
                       rel="noopener noreferrer"
                       className={cn(
-                        "w-full py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 border shadow-lg",
+                        "w-full py-2.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 border shadow-lg",
                         lessons[selectedDifficulty][level].videoUrl
-                          ? "bg-accent-amber/10 text-accent-amber border-accent-amber/30 hover:bg-accent-amber/20 animate-pulse-subtle"
+                          ? !levelProgress.tutorialWatched
+                            ? "bg-accent-amber text-bg border-accent-amber hover:brightness-110 animate-pulse-subtle"
+                            : "bg-accent-amber/10 text-accent-amber border-accent-amber/30 hover:bg-accent-amber/20"
                           : "bg-surface border-border-theme text-text-dim cursor-not-allowed opacity-50"
                       )}
                     >
                       <BookOpen size={14} />
                       {lessons[selectedDifficulty][level].videoUrl
-                        ? '[Start Here]'
+                        ? !levelProgress.tutorialWatched
+                          ? '↑ Start Here: Watch Tutorial'
+                          : 'Tutorial Watched'
                         : 'No Tutorial'}
                     </a>
                   ) : (
-                    <div className="w-full py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-2 border border-border-theme bg-surface text-text-dim opacity-50">
+                    <div className="w-full py-2.5 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-2 border border-border-theme bg-surface text-text-dim opacity-50">
                       <Lock size={14} />
                       [Tutorial Locked]
                     </div>
