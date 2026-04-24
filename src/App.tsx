@@ -140,6 +140,8 @@ export default function App() {
     handleInput,
     reset,
     loadText,
+    activeTest,
+    setActiveTest,
   });
 
   const adaptedLevel = useAdaptiveDifficulty(history);

@@ -66,6 +66,14 @@ interface UseSessionCoordinatorArgs {
   handleInput: (value: string) => void;
   reset: (keepText?: boolean) => void;
   loadText: (nextText: string) => void;
+  activeTest: {
+    difficulty: DifficultyKey;
+    level: LessonLevelKey;
+  } | null;
+  setActiveTest: (test: {
+    difficulty: DifficultyKey;
+    level: LessonLevelKey;
+  } | null) => void;
 }
 
 export function useSessionCoordinator({
@@ -102,6 +110,8 @@ export function useSessionCoordinator({
   handleInput,
   reset,
   loadText,
+  activeTest,
+  setActiveTest,
 }: UseSessionCoordinatorArgs) {
   const [showLessonComplete, setShowLessonComplete] = useState(false);
   const [activeTest, setActiveTest] = useState<{
@@ -396,6 +406,8 @@ export function useSessionCoordinator({
     setShowLessonComplete,
     showKeyboard,
     setShowKeyboard,
+    activeTest,
+    setActiveTest,
     isAdvancingExercise,
     personalBest,
     focusInput,
