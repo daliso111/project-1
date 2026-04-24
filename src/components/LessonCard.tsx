@@ -30,7 +30,7 @@ export function LessonCard({ lesson, isLoading, levelLabel }: LessonCardProps) {
             {levelLabel || 'lesson'}
           </p>
           <p className="text-[14px] font-bold text-text-main">{lesson.title}</p>
-          <p className="text-[11px] text-text-dim mt-0.5">{lesson.description}</p>
+          <p className="text-[11px] text-text-main/70 mt-0.5">{lesson.description}</p>
         </div>
       </div>
 
