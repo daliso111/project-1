@@ -7,8 +7,7 @@ import {
   DifficultyKey,
   completeExercise,
   markTutorialAsWatched,
-  updateLevelProgress,
-  PASS_THRESHOLDS,
+
 } from '../services/progressService';
 import { getLessonText } from '../services/contentService';
 import { SessionEndReason } from './useTypingEngine';
@@ -183,17 +182,7 @@ export function useSessionCoordinator({
           testPassed: true,
           testWpm: wpm,
           testAccuracy: accuracy,
-        })
-          .then(async () => {
-            await refreshUserProgress();
-            setActiveTest(null);
-            setShowLessonComplete(true);
-          })
-          .catch(console.error);
-      } else {
-        setActiveTest(null);
-      }
-      return;
+
     }
 
     if (activeLesson && user) {
@@ -326,7 +315,7 @@ export function useSessionCoordinator({
   ) => {
     const currentProgress = userProgress?.[nextDifficulty]?.[level];
     const completedExercises = currentProgress?.lessonExercises?.[lesson] ?? 0;
-    const exerciseNumber = Math.min(completedExercises + 1, 3);
+
 
     setActiveLesson({
       difficulty: nextDifficulty,
@@ -340,11 +329,7 @@ export function useSessionCoordinator({
 
     getLessonText(nextDifficulty, level, lesson, exerciseNumber)
       .then((nextText) => {
-        if (!nextText) {
-          console.warn('No text found in Supabase for:', nextDifficulty, level, lesson, exerciseNumber);
-          setIsAdvancingExercise(false);
-          return;
-        }
+
         setLessonText(nextText);
         setCustomText(nextText);
         setMode('Custom');
