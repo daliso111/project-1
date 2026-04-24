@@ -362,7 +362,28 @@ export function useSessionCoordinator({
     setActiveTest({ difficulty: nextDifficulty, level });
     setActiveTab('practice');
     setDifficulty(toDisplayDifficulty(nextDifficulty));
-    setMode('Time Attack');
+    setIsAdvancingExercise(true);
+
+    // Fetch test text from Supabase using lesson_number 0
+    getLessonText(nextDifficulty, level, 0, 1)
+      .then((testText) => {
+        if (testText) {
+          setCustomText(testText);
+          setLessonText(testText);
+          setMode('Custom');
+          loadText(testText);
+        } else {
+          // Fallback to Time Attack if no test text found
+          console.warn('No test text found in Supabase, falling back to Time Attack');
+          setMode('Time Attack');
+        }
+        setIsAdvancingExercise(false);
+      })
+      .catch((error) => {
+        console.error('Error fetching test text:', error);
+        setMode('Time Attack');
+        setIsAdvancingExercise(false);
+      });
   };
 
   return {
@@ -373,14 +394,14 @@ export function useSessionCoordinator({
     lessonsLoading,
     showLessonComplete,
     setShowLessonComplete,
-    activeTest,
-    setActiveTest,
     isAdvancingExercise,
     personalBest,
     focusInput,
     onInputChange,
     handleStartLesson,
     handleStartTest,
+    activeTest,
+    setActiveTest,
     handleWatchTutorial: async (diff: DifficultyKey, level: LessonLevelKey) => {
       if (user) {
         await markTutorialAsWatched(user.uid, diff, level);
