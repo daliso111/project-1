@@ -62,6 +62,8 @@ export default function App() {
   useEffect(() => {
     if (activeTab !== 'practice') {
       setLessonText(null);
+      setActiveLesson(null);
+      setActiveTest(null);
     }
   }, [activeTab]);
 
@@ -122,6 +124,8 @@ export default function App() {
     sessionEndReason,
     activeLesson,
     setActiveLesson,
+    activeTest,
+    setActiveTest,
     setActiveTab,
     setDifficulty,
     setMode,
@@ -206,6 +210,8 @@ export default function App() {
                 levelLabel={
                   activeLesson
                     ? `${activeLesson.difficulty} level ${activeLesson.level.slice(-1)}`
+                    : activeTest
+                    ? `${activeTest.difficulty} Level ${activeTest.level.slice(-1)} Test`
                     : undefined
                 }
                 effectiveDifficulty={effectiveDifficulty}

@@ -7,8 +7,7 @@ import {
   DifficultyKey,
   completeExercise,
   markTutorialAsWatched,
-  updateLevelProgress,
-  PASS_THRESHOLDS,
+
 } from '../services/progressService';
 import { getLessonText } from '../services/contentService';
 import { SessionEndReason } from './useTypingEngine';
@@ -107,6 +106,10 @@ export function useSessionCoordinator({
   loadText,
 }: UseSessionCoordinatorArgs) {
   const [showLessonComplete, setShowLessonComplete] = useState(false);
+  const [activeTest, setActiveTest] = useState<{
+    difficulty: DifficultyKey;
+    level: LessonLevelKey;
+  } | null>(null);
   const [isAdvancingExercise, setIsAdvancingExercise] = useState(false);
   const [showKeyboard, setShowKeyboard] = useState(true);
 
@@ -183,17 +186,7 @@ export function useSessionCoordinator({
           testPassed: true,
           testWpm: wpm,
           testAccuracy: accuracy,
-        })
-          .then(async () => {
-            await refreshUserProgress();
-            setActiveTest(null);
-            setShowLessonComplete(true);
-          })
-          .catch(console.error);
-      } else {
-        setActiveTest(null);
-      }
-      return;
+
     }
 
     if (activeLesson && user) {
@@ -326,7 +319,7 @@ export function useSessionCoordinator({
   ) => {
     const currentProgress = userProgress?.[nextDifficulty]?.[level];
     const completedExercises = currentProgress?.lessonExercises?.[lesson] ?? 0;
-    const exerciseNumber = Math.min(completedExercises + 1, 3);
+
 
     setActiveLesson({
       difficulty: nextDifficulty,
@@ -368,6 +361,7 @@ export function useSessionCoordinator({
     setDifficulty(toDisplayDifficulty(nextDifficulty));
     setIsAdvancingExercise(true);
 
+
     getLessonText(nextDifficulty, level, 0, 1)
       .then((testText) => {
         if (testText) {
@@ -376,6 +370,7 @@ export function useSessionCoordinator({
           setMode('Custom');
           loadText(testText);
         } else {
+
           console.warn('No test text found in Supabase, falling back to Time Attack');
           setMode('Time Attack');
         }
@@ -404,6 +399,8 @@ export function useSessionCoordinator({
     onInputChange,
     handleStartLesson,
     handleStartTest,
+    activeTest,
+    setActiveTest,
     handleWatchTutorial: async (diff: DifficultyKey, level: LessonLevelKey) => {
       if (user) {
         await markTutorialAsWatched(user.uid, diff, level);
