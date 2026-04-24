@@ -95,6 +95,7 @@ export function useSessionCoordinator({
 }: UseSessionCoordinatorArgs) {
   const [showLessonComplete, setShowLessonComplete] = useState(false);
   const [isAdvancingExercise, setIsAdvancingExercise] = useState(false);
+  const [showKeyboard, setShowKeyboard] = useState(true);
   const {
     history,
     setHistory,
@@ -337,6 +338,8 @@ export function useSessionCoordinator({
     lessonsLoading,
     showLessonComplete,
     setShowLessonComplete,
+    showKeyboard,
+    setShowKeyboard,
     isAdvancingExercise,
     personalBest,
     focusInput,

@@ -33,6 +33,8 @@ interface HeaderProps {
   setVolume: (volume: number) => void;
   theme: Theme;
   setTheme: (theme: Theme) => void;
+  showKeyboard: boolean;
+  setShowKeyboard: (show: boolean) => void;
   activeTab: 'practice' | 'stats' | 'learn';
   setActiveTab: (tab: 'practice' | 'stats' | 'learn') => void;
   user: User;
@@ -54,6 +56,8 @@ export function Header({
   setVolume,
   theme,
   setTheme,
+  showKeyboard,
+  setShowKeyboard,
   activeTab,
   setActiveTab,
   user,
@@ -220,6 +224,26 @@ export function Header({
                           );
                         })}
                       </div>
+                    </div>
+
+                    <div className="h-px bg-border-theme" />
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-text-dim">
+                        Virtual Keyboard
+                      </span>
+                      <button
+                        onClick={() => setShowKeyboard(!showKeyboard)}
+                        className={cn(
+                          "w-8 h-4 rounded-full transition-all relative",
+                          showKeyboard ? "bg-accent-blue" : "bg-border-theme"
+                        )}
+                      >
+                        <div className={cn(
+                          "absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all",
+                          showKeyboard ? "left-4" : "left-0.5"
+                        )} />
+                      </button>
                     </div>
                   </div>
                 </motion.div>
