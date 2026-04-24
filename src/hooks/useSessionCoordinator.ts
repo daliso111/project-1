@@ -185,6 +185,9 @@ export function useSessionCoordinator({
             setShowLessonComplete(true);
           })
           .catch(console.error);
+      } else {
+        // Failed the test — allow retry without looping
+        setActiveTest(null);
       }
       return;
     }
