@@ -35,6 +35,8 @@ interface HeaderProps {
   setTheme: (theme: Theme) => void;
   activeTab: 'practice' | 'stats' | 'learn';
   setActiveTab: (tab: 'practice' | 'stats' | 'learn') => void;
+  showKeyboard: boolean;
+  setShowKeyboard: (show: boolean) => void;
   user: User;
   handleLogout: () => void;
 }
@@ -56,6 +58,8 @@ export function Header({
   setTheme,
   activeTab,
   setActiveTab,
+  showKeyboard,
+  setShowKeyboard,
   user,
   handleLogout,
 }: HeaderProps) {
@@ -219,6 +223,26 @@ export function Header({
                             />
                           );
                         })}
+                      </div>
+                    </div>
+
+                    <div className="h-px bg-border-theme" />
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-text-dim">
+                          <Layout size={14} />
+                          <span className="text-[10px] font-bold uppercase tracking-wider">Keyboard</span>
+                        </div>
+                        <button
+                          onClick={() => setShowKeyboard(!showKeyboard)}
+                          className={cn(
+                            "text-[10px] font-bold transition-colors",
+                            showKeyboard ? "text-accent-blue" : "text-text-dim hover:text-text-main"
+                          )}
+                        >
+                          {showKeyboard ? 'Visible' : 'Hidden'}
+                        </button>
                       </div>
                     </div>
                   </div>
