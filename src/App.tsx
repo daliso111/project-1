@@ -95,6 +95,8 @@ export default function App() {
     lessonsLoading,
     showLessonComplete,
     setShowLessonComplete,
+    showKeyboard,
+    setShowKeyboard,
     personalBest,
     focusInput,
     onInputChange,
@@ -174,6 +176,8 @@ export default function App() {
                 setVolume={setVolume}
                 theme={theme}
                 setTheme={setTheme}
+                showKeyboard={showKeyboard}
+                setShowKeyboard={setShowKeyboard}
                 activeTab={headerActiveTab}
                 setActiveTab={setActiveTab}
                 user={user}
@@ -223,6 +227,8 @@ export default function App() {
                 isStarted={isStarted}
                 reset={reset}
                 isAdvancingExercise={isAdvancingExercise}
+                showKeyboard={showKeyboard}
+                nextChar={text[userInput.length]}
               />
             )}
 
