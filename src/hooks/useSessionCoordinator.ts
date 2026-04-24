@@ -7,13 +7,13 @@ import {
   DifficultyKey,
   completeExercise,
   markTutorialAsWatched,
-
+  EXERCISES_PER_LESSON,
+  PASS_THRESHOLDS,
+  updateLevelProgress,
 } from '../services/progressService';
 import { getLessonText } from '../services/contentService';
 import { SessionEndReason } from './useTypingEngine';
 import { useUserLearningData } from './useUserLearningData';
-
-const EXERCISES_PER_LESSON = 3;
 
 type ActiveTab = 'practice' | 'stats' | 'learn';
 type ActiveLesson = {
@@ -107,8 +107,6 @@ export function useSessionCoordinator({
 }: UseSessionCoordinatorArgs) {
   const [showLessonComplete, setShowLessonComplete] = useState(false);
   const [isAdvancingExercise, setIsAdvancingExercise] = useState(false);
-  const [showKeyboard, setShowKeyboard] = useState(true);
-
   const {
     history,
     setHistory,
@@ -133,7 +131,10 @@ export function useSessionCoordinator({
       return;
     }
 
-    if (hasProcessedFinishedSessionRef.current) return;
+    if (hasProcessedFinishedSessionRef.current) {
+      return;
+    }
+
     hasProcessedFinishedSessionRef.current = true;
 
     playComplete();
@@ -160,13 +161,14 @@ export function useSessionCoordinator({
 
     const nextHistory = [...historyRef.current, result];
     persistHistory(nextHistory);
+
     updateStreak();
 
     checkBadges({
       wpm,
       accuracy,
       streak: streak + 1,
-      codeSessions: nextHistory.filter((s) => s.mode === 'Code').length,
+      codeSessions: nextHistory.filter((session) => session.mode === 'Code').length,
     });
 
     if (user) {
@@ -182,7 +184,8 @@ export function useSessionCoordinator({
           testPassed: true,
           testWpm: wpm,
           testAccuracy: accuracy,
-
+        }).then(() => refreshUserProgress());
+      }
     }
 
     if (activeLesson && user) {
@@ -233,7 +236,6 @@ export function useSessionCoordinator({
     }
   }, [
     activeLesson,
-    activeTest,
     accuracy,
     checkBadges,
     difficulty,
@@ -247,7 +249,6 @@ export function useSessionCoordinator({
     refreshUserProgress,
     reset,
     setActiveLesson,
-    setActiveTest,
     setMode,
     streak,
     timeElapsed,
@@ -302,9 +303,13 @@ export function useSessionCoordinator({
   const onInputChange = (value: string) => {
     if (value.length > userInput.length) {
       const isCorrect = value[value.length - 1] === text[value.length - 1];
-      if (isCorrect) playCorrect();
-      else playError();
+      if (isCorrect) {
+        playCorrect();
+      } else {
+        playError();
+      }
     }
+
     handleInput(value);
   };
 
@@ -316,6 +321,9 @@ export function useSessionCoordinator({
     const currentProgress = userProgress?.[nextDifficulty]?.[level];
     const completedExercises = currentProgress?.lessonExercises?.[lesson] ?? 0;
 
+    // If the lesson is fully completed, start from exercise 1 for revision
+    // otherwise, start from the next uncompleted exercise
+    const exerciseNumber = completedExercises >= EXERCISES_PER_LESSON ? 1 : completedExercises + 1;
 
     setActiveLesson({
       difficulty: nextDifficulty,
@@ -329,7 +337,7 @@ export function useSessionCoordinator({
 
     getLessonText(nextDifficulty, level, lesson, exerciseNumber)
       .then((nextText) => {
-
+        if (!nextText) return;
         setLessonText(nextText);
         setCustomText(nextText);
         setMode('Custom');
@@ -380,8 +388,6 @@ export function useSessionCoordinator({
     lessonsLoading,
     showLessonComplete,
     setShowLessonComplete,
-    showKeyboard,
-    setShowKeyboard,
     isAdvancingExercise,
     personalBest,
     focusInput,

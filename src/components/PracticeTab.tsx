@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { RotateCcw } from 'lucide-react';
-
 import { Difficulty } from '../constants';
 import { cn, formatTime } from '../lib/utils';
 
@@ -20,8 +19,6 @@ interface PracticeTabProps {
   isStarted: boolean;
   reset: (tryAgain?: boolean) => void;
   isAdvancingExercise?: boolean;
-  showKeyboard: boolean;
-  nextChar?: string;
 }
 
 export function PracticeTab({
@@ -39,8 +36,6 @@ export function PracticeTab({
   isStarted,
   reset,
   isAdvancingExercise = false,
-  showKeyboard,
-  nextChar,
 }: PracticeTabProps) {
   return (
     <div className="space-y-6">
@@ -118,17 +113,13 @@ export function PracticeTab({
             <motion.p
               animate={{ opacity: [0.3, 0.7, 0.3] }}
               transition={{ repeat: Infinity, duration: 2 }}
-              className="text-text-dim font-medium"
+              className="text-text-dim text-[13px] font-medium"
             >
               Start typing to begin...
             </motion.p>
           </div>
         )}
       </div>
-
-      {showKeyboard && (
-        <GhostKeyboard nextChar={nextChar} />
-      )}
 
       <div className="flex justify-center pt-4">
         <button
