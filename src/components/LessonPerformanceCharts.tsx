@@ -95,31 +95,17 @@ export function LessonPerformanceCharts({
                 dataKey="averageWpm"
                 stroke="#22c55e"
                 strokeWidth={2}
-                dot={(props: any) => {
-                  const { cx, cy, payload } = props;
-                  if (payload?.averageWpm === null) return <g key={props.key} />;
-                  return (
-                    <circle
-                      key={props.key}
-                      cx={cx}
-                      cy={cy}
-                      r={4}
-                      fill="#22c55e"
-                      stroke="#22c55e"
-                    />
-                  );
-                }}
+                dot={{ fill: '#22c55e', r: 4 }}
                 activeDot={{ r: 6, fill: '#22c55e' }}
-                connectNulls={true}
+                connectNulls={false}
               />
               <Line
                 type="monotone"
                 dataKey="partialAverageWpm"
-                stroke="none"
+                stroke="transparent"
                 dot={<IncompleteLessonDot />}
                 activeDot={false}
                 connectNulls={false}
-                legendType="none"
               />
             </LineChart>
           </ResponsiveContainer>
