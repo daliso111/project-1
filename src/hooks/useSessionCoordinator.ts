@@ -7,9 +7,7 @@ import {
   DifficultyKey,
   completeExercise,
   markTutorialAsWatched,
-  EXERCISES_PER_LESSON,
-  PASS_THRESHOLDS,
-  updateLevelProgress,
+ main
 } from '../services/progressService';
 import { getLessonText } from '../services/contentService';
 import { SessionEndReason } from './useTypingEngine';
@@ -106,6 +104,10 @@ export function useSessionCoordinator({
   loadText,
 }: UseSessionCoordinatorArgs) {
   const [showLessonComplete, setShowLessonComplete] = useState(false);
+  const [activeTest, setActiveTest] = useState<{
+    difficulty: DifficultyKey;
+    level: LessonLevelKey;
+  } | null>(null);
   const [isAdvancingExercise, setIsAdvancingExercise] = useState(false);
   const {
     history,
@@ -184,8 +186,7 @@ export function useSessionCoordinator({
           testPassed: true,
           testWpm: wpm,
           testAccuracy: accuracy,
-        }).then(() => refreshUserProgress());
-      }
+
     }
 
     if (activeLesson && user) {
@@ -321,9 +322,6 @@ export function useSessionCoordinator({
     const currentProgress = userProgress?.[nextDifficulty]?.[level];
     const completedExercises = currentProgress?.lessonExercises?.[lesson] ?? 0;
 
-    // If the lesson is fully completed, start from exercise 1 for revision
-    // otherwise, start from the next uncompleted exercise
-    const exerciseNumber = completedExercises >= EXERCISES_PER_LESSON ? 1 : completedExercises + 1;
 
     setActiveLesson({
       difficulty: nextDifficulty,
@@ -337,7 +335,12 @@ export function useSessionCoordinator({
 
     getLessonText(nextDifficulty, level, lesson, exerciseNumber)
       .then((nextText) => {
-        if (!nextText) return;
+        console.log('Supabase text fetched:', nextText, 'for exercise:', exerciseNumber);
+        if (!nextText) {
+          console.warn('No text found in Supabase for:', nextDifficulty, level, lesson, exerciseNumber);
+          setIsAdvancingExercise(false);
+          return;
+        }
         setLessonText(nextText);
         setCustomText(nextText);
         setMode('Custom');
@@ -360,6 +363,7 @@ export function useSessionCoordinator({
     setDifficulty(toDisplayDifficulty(nextDifficulty));
     setIsAdvancingExercise(true);
 
+
     getLessonText(nextDifficulty, level, 0, 1)
       .then((testText) => {
         if (testText) {
@@ -368,6 +372,7 @@ export function useSessionCoordinator({
           setMode('Custom');
           loadText(testText);
         } else {
+
           console.warn('No test text found in Supabase, falling back to Time Attack');
           setMode('Time Attack');
         }
@@ -394,6 +399,8 @@ export function useSessionCoordinator({
     onInputChange,
     handleStartLesson,
     handleStartTest,
+    activeTest,
+    setActiveTest,
     handleWatchTutorial: async (diff: DifficultyKey, level: LessonLevelKey) => {
       if (user) {
         await markTutorialAsWatched(user.uid, diff, level);
