@@ -26,16 +26,18 @@ const KEY_CODES: Record<string, string> = {
   'Space': 'Space',
 };
 
-const WIDE_KEYS: Record<string, string> = {
-  'Backspace': 'w-20',
-  'Tab': 'w-16',
-  '\\': 'w-16',
-  'CapsLock': 'w-20',
-  'Enter': 'w-24',
-  'ShiftLeft': 'w-28',
-  'ShiftRight': 'w-28',
-  'Space': 'w-80',
+const WIDE_KEYS: Record<string, number> = {
+  'Backspace': 80,
+  'Tab': 64,
+  '\\': 64,
+  'CapsLock': 80,
+  'Enter': 96,
+  'ShiftLeft': 112,
+  'ShiftRight': 112,
+  'Space': 320,
 };
+
+const DEFAULT_KEY_WIDTH = 40;
 
 const KEY_LABELS: Record<string, string> = {
   'Backspace': '⌫',
@@ -90,27 +92,28 @@ export function GhostKeyboard({ nextChar }: GhostKeyboardProps) {
             const isActive = activeKeys.has(code);
             const isNext = nextKeyCode === code;
             const label = KEY_LABELS[key] ?? key.toLowerCase();
-            const widthClass = WIDE_KEYS[key] ?? 'w-10';
+            const width = WIDE_KEYS[key] ?? DEFAULT_KEY_WIDTH;
 
             return (
               <div
                 key={key}
                 className={cn(
                   "h-10 flex items-center justify-center rounded-md text-[10px] font-bold tracking-wider transition-all duration-75 border select-none",
-                  widthClass,
                   isActive
                     ? "border-accent-blue text-accent-blue bg-accent-blue/10"
                     : isNext
                     ? "border-accent-blue/50 text-accent-blue/70 bg-accent-blue/5 animate-pulse"
                     : "border-white/10 text-white/20 bg-transparent"
                 )}
-                style={
-                  isActive
+                style={{
+                  width: `${width}px`,
+                  minWidth: `${width}px`,
+                  ...(isActive
                     ? { boxShadow: '0 0 12px rgba(59,130,246,0.4), inset 0 0 8px rgba(59,130,246,0.2)' }
                     : isNext
                     ? { boxShadow: '0 0 8px rgba(59,130,246,0.2)' }
-                    : {}
-                }
+                    : {})
+                }}
               >
                 {label}
               </div>
