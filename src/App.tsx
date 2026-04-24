@@ -35,6 +35,11 @@ type ActiveLesson = {
   exerciseNum: number;
 } | null;
 
+type ActiveTest = {
+  difficulty: DifficultyKey;
+  level: 'level1' | 'level2' | 'level3';
+} | null;
+
 export default function App() {
   const inputRef = useRef<HTMLInputElement>(null);
   const { user, isProfilePending, isAuthChecking, setIsProfilePending, handleLogout } = useAuthSession();
@@ -47,6 +52,7 @@ export default function App() {
   const [timeLimit] = useState<TimeLimit>(60);
   const [activeTab, setActiveTab] = useState<ActiveTab>('learn');
   const [activeLesson, setActiveLesson] = useState<ActiveLesson>(null);
+  const [activeTest, setActiveTest] = useState<ActiveTest>(null);
   const [lessonText, setLessonText] = useState<string | null>(null);
   const [punctMode] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('All');
@@ -130,6 +136,8 @@ export default function App() {
     handleInput,
     reset,
     loadText,
+    activeTest,
+    setActiveTest,
   });
 
   const adaptedLevel = useAdaptiveDifficulty(history);
