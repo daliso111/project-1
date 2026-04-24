@@ -94,8 +94,8 @@ export function useSessionCoordinator({
   loadText,
 }: UseSessionCoordinatorArgs) {
   const [showLessonComplete, setShowLessonComplete] = useState(false);
-  const [showKeyboard, setShowKeyboard] = useState(true);
   const [isAdvancingExercise, setIsAdvancingExercise] = useState(false);
+  const [showKeyboard, setShowKeyboard] = useState(true);
   const {
     history,
     setHistory,
