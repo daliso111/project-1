@@ -7,10 +7,14 @@ import {
   DifficultyKey,
   completeExercise,
   markTutorialAsWatched,
+  updateLevelProgress,
+  PASS_THRESHOLDS,
 } from '../services/progressService';
 import { getLessonText } from '../services/contentService';
 import { SessionEndReason } from './useTypingEngine';
 import { useUserLearningData } from './useUserLearningData';
+
+const EXERCISES_PER_LESSON = 3;
 
 type ActiveTab = 'practice' | 'stats' | 'learn';
 type ActiveLesson = {
@@ -18,6 +22,11 @@ type ActiveLesson = {
   level: LessonLevelKey;
   lessonNum: number;
   exerciseNum: number;
+} | null;
+
+type ActiveTest = {
+  difficulty: DifficultyKey;
+  level: LessonLevelKey;
 } | null;
 
 interface UseSessionCoordinatorArgs {
@@ -39,6 +48,8 @@ interface UseSessionCoordinatorArgs {
   sessionEndReason: SessionEndReason | null;
   activeLesson: ActiveLesson;
   setActiveLesson: (lesson: ActiveLesson) => void;
+  activeTest: ActiveTest;
+  setActiveTest: (test: ActiveTest) => void;
   setActiveTab: (tab: ActiveTab) => void;
   setDifficulty: (difficulty: Difficulty) => void;
   setMode: (mode: PracticeMode) => void;
@@ -58,14 +69,6 @@ interface UseSessionCoordinatorArgs {
   handleInput: (value: string) => void;
   reset: (keepText?: boolean) => void;
   loadText: (nextText: string) => void;
-  activeTest: {
-    difficulty: DifficultyKey;
-    level: LessonLevelKey;
-  } | null;
-  setActiveTest: (test: {
-    difficulty: DifficultyKey;
-    level: LessonLevelKey;
-  } | null) => void;
 }
 
 export function useSessionCoordinator({
@@ -86,6 +89,8 @@ export function useSessionCoordinator({
   sessionEndReason,
   activeLesson,
   setActiveLesson,
+  activeTest,
+  setActiveTest,
   setActiveTab,
   setDifficulty,
   setMode,
@@ -100,12 +105,11 @@ export function useSessionCoordinator({
   handleInput,
   reset,
   loadText,
-  activeTest,
-  setActiveTest,
 }: UseSessionCoordinatorArgs) {
   const [showLessonComplete, setShowLessonComplete] = useState(false);
   const [isAdvancingExercise, setIsAdvancingExercise] = useState(false);
   const [showKeyboard, setShowKeyboard] = useState(true);
+
   const {
     history,
     setHistory,
@@ -130,10 +134,7 @@ export function useSessionCoordinator({
       return;
     }
 
-    if (hasProcessedFinishedSessionRef.current) {
-      return;
-    }
-
+    if (hasProcessedFinishedSessionRef.current) return;
     hasProcessedFinishedSessionRef.current = true;
 
     playComplete();
@@ -160,18 +161,39 @@ export function useSessionCoordinator({
 
     const nextHistory = [...historyRef.current, result];
     persistHistory(nextHistory);
-
     updateStreak();
 
     checkBadges({
       wpm,
       accuracy,
       streak: streak + 1,
-      codeSessions: nextHistory.filter((session) => session.mode === 'Code').length,
+      codeSessions: nextHistory.filter((s) => s.mode === 'Code').length,
     });
 
     if (user) {
       void saveUserStats(user.uid, wpm, accuracy);
+    }
+
+    if (activeTest && user) {
+      const threshold = PASS_THRESHOLDS[activeTest.difficulty];
+      const passed = wpm >= threshold.wpm && accuracy >= threshold.accuracy;
+
+      if (passed) {
+        updateLevelProgress(user.uid, activeTest.difficulty, activeTest.level, {
+          testPassed: true,
+          testWpm: wpm,
+          testAccuracy: accuracy,
+        })
+          .then(async () => {
+            await refreshUserProgress();
+            setActiveTest(null);
+            setShowLessonComplete(true);
+          })
+          .catch(console.error);
+      } else {
+        setActiveTest(null);
+      }
+      return;
     }
 
     if (activeLesson && user) {
@@ -182,10 +204,12 @@ export function useSessionCoordinator({
         activeLesson.level,
         activeLesson.lessonNum
       )
-        .then(async ({ lessonCompleted, nextExerciseNumber }) => {
+        .then(async ({ nextExerciseNumber }) => {
           await refreshUserProgress();
 
-          if (lessonCompleted) {
+          const isLastExercise = activeLesson.exerciseNum >= EXERCISES_PER_LESSON;
+
+          if (isLastExercise) {
             setIsAdvancingExercise(false);
             setShowLessonComplete(true);
             setActiveLesson(null);
@@ -220,6 +244,7 @@ export function useSessionCoordinator({
     }
   }, [
     activeLesson,
+    activeTest,
     accuracy,
     checkBadges,
     difficulty,
@@ -233,6 +258,7 @@ export function useSessionCoordinator({
     refreshUserProgress,
     reset,
     setActiveLesson,
+    setActiveTest,
     setMode,
     streak,
     timeElapsed,
@@ -287,13 +313,9 @@ export function useSessionCoordinator({
   const onInputChange = (value: string) => {
     if (value.length > userInput.length) {
       const isCorrect = value[value.length - 1] === text[value.length - 1];
-      if (isCorrect) {
-        playCorrect();
-      } else {
-        playError();
-      }
+      if (isCorrect) playCorrect();
+      else playError();
     }
-
     handleInput(value);
   };
 
@@ -303,21 +325,27 @@ export function useSessionCoordinator({
     lesson: number
   ) => {
     const currentProgress = userProgress?.[nextDifficulty]?.[level];
-    const exerciseNumber = (currentProgress?.lessonExercises?.[lesson] ?? 0) + 1;
+    const completedExercises = currentProgress?.lessonExercises?.[lesson] ?? 0;
+    const exerciseNumber = Math.min(completedExercises + 1, 3);
 
     setActiveLesson({
       difficulty: nextDifficulty,
       level,
       lessonNum: lesson,
-      exerciseNum: Math.min(exerciseNumber, 3),
+      exerciseNum: exerciseNumber,
     });
     setActiveTab('practice');
     setDifficulty(toDisplayDifficulty(nextDifficulty));
     setIsAdvancingExercise(true);
 
-    getLessonText(nextDifficulty, level, lesson, Math.min(exerciseNumber, 3))
+    getLessonText(nextDifficulty, level, lesson, exerciseNumber)
       .then((nextText) => {
-        if (!nextText) return;
+        console.log('Supabase text fetched:', nextText, 'for exercise:', exerciseNumber);
+        if (!nextText) {
+          console.warn('No text found in Supabase for:', nextDifficulty, level, lesson, exerciseNumber);
+          setIsAdvancingExercise(false);
+          return;
+        }
         setLessonText(nextText);
         setCustomText(nextText);
         setMode('Custom');
@@ -332,12 +360,32 @@ export function useSessionCoordinator({
 
   const handleStartTest = (
     nextDifficulty: DifficultyKey,
-    _level: LessonLevelKey
+    level: LessonLevelKey
   ) => {
     setActiveLesson(null);
+    setActiveTest({ difficulty: nextDifficulty, level });
     setActiveTab('practice');
     setDifficulty(toDisplayDifficulty(nextDifficulty));
-    setMode('Time Attack');
+    setIsAdvancingExercise(true);
+
+    getLessonText(nextDifficulty, level, 0, 1)
+      .then((testText) => {
+        if (testText) {
+          setCustomText(testText);
+          setLessonText(testText);
+          setMode('Custom');
+          loadText(testText);
+        } else {
+          console.warn('No test text found in Supabase, falling back to Time Attack');
+          setMode('Time Attack');
+        }
+        setIsAdvancingExercise(false);
+      })
+      .catch((error) => {
+        console.error('Error fetching test text:', error);
+        setMode('Time Attack');
+        setIsAdvancingExercise(false);
+      });
   };
 
   return {
@@ -350,8 +398,6 @@ export function useSessionCoordinator({
     setShowLessonComplete,
     showKeyboard,
     setShowKeyboard,
-    activeTest,
-    setActiveTest,
     isAdvancingExercise,
     personalBest,
     focusInput,
