@@ -95,6 +95,8 @@ export default function App() {
     lessonsLoading,
     showLessonComplete,
     setShowLessonComplete,
+    showKeyboard,
+    setShowKeyboard,
     personalBest,
     focusInput,
     onInputChange,
@@ -103,8 +105,6 @@ export default function App() {
     handleWatchTutorial,
     setHistory,
     isAdvancingExercise,
-    showKeyboard,
-    setShowKeyboard,
   } = useSessionCoordinator({
     user,
     inputRef,
@@ -176,10 +176,10 @@ export default function App() {
                 setVolume={setVolume}
                 theme={theme}
                 setTheme={setTheme}
-                activeTab={headerActiveTab}
-                setActiveTab={setActiveTab}
                 showKeyboard={showKeyboard}
                 setShowKeyboard={setShowKeyboard}
+                activeTab={headerActiveTab}
+                setActiveTab={setActiveTab}
                 user={user}
                 handleLogout={() => handleLogout(() => setHistory([]))}
               />
@@ -202,8 +202,6 @@ export default function App() {
               <PracticeTab
                 effectiveDifficulty={effectiveDifficulty}
                 wpm={wpm}
-                showKeyboard={showKeyboard}
-                nextChar={text[userInput.length]}
                 accuracy={accuracy}
                 timeLeft={timeLeft}
                 errors={errors}
@@ -216,6 +214,8 @@ export default function App() {
                 isStarted={isStarted}
                 reset={reset}
                 isAdvancingExercise={isAdvancingExercise}
+                showKeyboard={showKeyboard}
+                nextChar={text[userInput.length]}
               />
             )}
 
