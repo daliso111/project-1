@@ -8,6 +8,8 @@ import {
   completeExercise,
   markTutorialAsWatched,
   EXERCISES_PER_LESSON,
+  PASS_THRESHOLDS,
+  updateLevelProgress,
 } from '../services/progressService';
 import { getLessonText } from '../services/contentService';
 import { SessionEndReason } from './useTypingEngine';
@@ -19,6 +21,11 @@ type ActiveLesson = {
   level: LessonLevelKey;
   lessonNum: number;
   exerciseNum: number;
+} | null;
+
+type ActiveTest = {
+  difficulty: DifficultyKey;
+  level: LessonLevelKey;
 } | null;
 
 interface UseSessionCoordinatorArgs {
@@ -40,6 +47,8 @@ interface UseSessionCoordinatorArgs {
   sessionEndReason: SessionEndReason | null;
   activeLesson: ActiveLesson;
   setActiveLesson: (lesson: ActiveLesson) => void;
+  activeTest: ActiveTest;
+  setActiveTest: (test: ActiveTest) => void;
   setActiveTab: (tab: ActiveTab) => void;
   setDifficulty: (difficulty: Difficulty) => void;
   setMode: (mode: PracticeMode) => void;
@@ -79,6 +88,8 @@ export function useSessionCoordinator({
   sessionEndReason,
   activeLesson,
   setActiveLesson,
+  activeTest,
+  setActiveTest,
   setActiveTab,
   setDifficulty,
   setMode,
@@ -162,6 +173,19 @@ export function useSessionCoordinator({
 
     if (user) {
       void saveUserStats(user.uid, wpm, accuracy);
+    }
+
+    if (activeTest && user) {
+      const threshold = PASS_THRESHOLDS[activeTest.difficulty];
+      const passed = wpm >= threshold.wpm && accuracy >= threshold.accuracy;
+
+      if (passed) {
+        updateLevelProgress(user.uid, activeTest.difficulty, activeTest.level, {
+          testPassed: true,
+          testWpm: wpm,
+          testAccuracy: accuracy,
+        }).then(() => refreshUserProgress());
+      }
     }
 
     if (activeLesson && user) {
@@ -328,12 +352,32 @@ export function useSessionCoordinator({
 
   const handleStartTest = (
     nextDifficulty: DifficultyKey,
-    _level: LessonLevelKey
+    level: LessonLevelKey
   ) => {
     setActiveLesson(null);
+    setActiveTest({ difficulty: nextDifficulty, level });
     setActiveTab('practice');
     setDifficulty(toDisplayDifficulty(nextDifficulty));
-    setMode('Time Attack');
+    setIsAdvancingExercise(true);
+
+    getLessonText(nextDifficulty, level, 0, 1)
+      .then((testText) => {
+        if (testText) {
+          setCustomText(testText);
+          setLessonText(testText);
+          setMode('Custom');
+          loadText(testText);
+        } else {
+          console.warn('No test text found in Supabase, falling back to Time Attack');
+          setMode('Time Attack');
+        }
+        setIsAdvancingExercise(false);
+      })
+      .catch((error) => {
+        console.error('Error fetching test text:', error);
+        setMode('Time Attack');
+        setIsAdvancingExercise(false);
+      });
   };
 
   return {
