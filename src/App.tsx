@@ -35,6 +35,11 @@ type ActiveLesson = {
   exerciseNum: number;
 } | null;
 
+type ActiveTest = {
+  difficulty: DifficultyKey;
+  level: 'level1' | 'level2' | 'level3';
+} | null;
+
 export default function App() {
   const inputRef = useRef<HTMLInputElement>(null);
   const { user, isProfilePending, isAuthChecking, setIsProfilePending, handleLogout } = useAuthSession();
@@ -47,6 +52,7 @@ export default function App() {
   const [timeLimit] = useState<TimeLimit>(60);
   const [activeTab, setActiveTab] = useState<ActiveTab>('learn');
   const [activeLesson, setActiveLesson] = useState<ActiveLesson>(null);
+  const [activeTest, setActiveTest] = useState<ActiveTest>(null);
   const [lessonText, setLessonText] = useState<string | null>(null);
   const [punctMode] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('All');
@@ -56,6 +62,8 @@ export default function App() {
   useEffect(() => {
     if (activeTab !== 'practice') {
       setLessonText(null);
+      setActiveLesson(null);
+      setActiveTest(null);
     }
   }, [activeTab]);
 
@@ -116,6 +124,8 @@ export default function App() {
     sessionEndReason,
     activeLesson,
     setActiveLesson,
+    activeTest,
+    setActiveTest,
     setActiveTab,
     setDifficulty,
     setMode,
@@ -190,18 +200,7 @@ export default function App() {
 
             {user && activeTab === 'practice' && (
               <PracticeTab
-                currentLevelLesson={
-                  activeLesson && lessons
-                    ? lessons[activeLesson.difficulty][activeLesson.level]
-                    : null
-                }
-                levelLabel={
-                  activeLesson
-                    ? `${activeLesson.difficulty} level ${activeLesson.level.slice(-1)}`
-                    : undefined
-                }
                 effectiveDifficulty={effectiveDifficulty}
-                lessonsLoading={lessonsLoading}
                 wpm={wpm}
                 accuracy={accuracy}
                 timeLeft={timeLeft}
