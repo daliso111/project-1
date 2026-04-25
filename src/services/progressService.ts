@@ -45,7 +45,8 @@ export const completeExercise = async (
   userId: string,
   difficulty: DifficultyKey,
   level: 'level1' | 'level2' | 'level3',
-  lessonNum: number
+  lessonNum: number,
+  currentExerciseNum: number
 ): Promise<{ lessonCompleted: boolean; allLessonsCompleted: boolean; nextExerciseNumber: number }> => {
   const docRef = doc(db, 'progress', userId);
   const docSnap = await getDoc(docRef);
@@ -53,7 +54,12 @@ export const completeExercise = async (
 
   const levelProgress = current[difficulty][level];
   const currentExercises = levelProgress.lessonExercises?.[lessonNum] ?? 0;
-  const newExercises = Math.min(currentExercises + 1, EXERCISES_PER_LESSON);
+  const isRevision = currentExercises >= EXERCISES_PER_LESSON;
+
+  const newExercises = isRevision
+    ? currentExercises
+    : Math.min(currentExercises + 1, EXERCISES_PER_LESSON);
+
   const lessonCompleted = newExercises >= EXERCISES_PER_LESSON;
 
   const newLessonsCompleted = lessonCompleted && lessonNum > levelProgress.lessonsCompleted
@@ -77,10 +83,14 @@ export const completeExercise = async (
 
   await setDoc(docRef, updated);
 
+  const nextExercise = isRevision
+    ? (currentExerciseNum % EXERCISES_PER_LESSON) + 1
+    : Math.min(newExercises + 1, EXERCISES_PER_LESSON);
+
   return {
-    lessonCompleted,
+    lessonCompleted: isRevision ? false : lessonCompleted,
     allLessonsCompleted: newLessonsCompleted >= 5,
-    nextExerciseNumber: Math.min(newExercises + 1, 3)
+    nextExerciseNumber: nextExercise
   };
 };
 
@@ -178,20 +188,4 @@ export const isLevelUnlocked = (
   }
   const prevLevel = level === 'level2' ? 'level1' : 'level2';
   return progress[difficulty][prevLevel].testPassed;
-};
-
-export const isTutorialUnlocked = (
-  progress: UserProgress,
-  difficulty: DifficultyKey,
-  level: 'level1' | 'level2' | 'level3'
-): boolean => {
-  if (level === 'level1' && difficulty === 'beginner') return true;
-
-  if (level === 'level1') {
-    const prevDifficulty = difficulty === 'intermediate' ? 'beginner' : 'intermediate';
-    return progress[prevDifficulty].level3.tutorialWatched;
-  }
-
-  const prevLevel = level === 'level2' ? 'level1' : 'level2';
-  return progress[difficulty][prevLevel].tutorialWatched;
 };
