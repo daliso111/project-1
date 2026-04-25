@@ -190,18 +190,7 @@ export default function App() {
 
             {user && activeTab === 'practice' && (
               <PracticeTab
-                currentLevelLesson={
-                  activeLesson && lessons
-                    ? lessons[activeLesson.difficulty][activeLesson.level]
-                    : null
-                }
-                levelLabel={
-                  activeLesson
-                    ? `${activeLesson.difficulty} level ${activeLesson.level.slice(-1)}`
-                    : undefined
-                }
                 effectiveDifficulty={effectiveDifficulty}
-                lessonsLoading={lessonsLoading}
                 wpm={wpm}
                 accuracy={accuracy}
                 timeLeft={timeLeft}
