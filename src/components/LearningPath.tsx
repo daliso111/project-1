@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Lock, CheckCircle, PlayCircle, Trophy, BookOpen } from 'lucide-react';
-import { UserProgress, isLevelUnlocked, isTutorialUnlocked, PASS_THRESHOLDS, DifficultyKey } from '../services/progressService';
+import { UserProgress, isLevelUnlocked, PASS_THRESHOLDS, DifficultyKey } from '../services/progressService';
 import { LessonKey, Lesson } from '../services/lessonService';
 import { LessonLevelKey } from '../constants';
 import { cn } from '../lib/utils';
@@ -111,7 +111,6 @@ export function LearningPath({ progress, lessons, isLoading, onStartLesson, onSt
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {LEVELS.map((level, levelIndex) => {
             const unlocked = isLevelUnlocked(progress, selectedDifficulty, level);
-            const tutorialUnlocked = isTutorialUnlocked(progress, selectedDifficulty, level);
             const levelProgress = progress[selectedDifficulty][level];
             const threshold = PASS_THRESHOLDS[selectedDifficulty];
 
@@ -123,7 +122,7 @@ export function LearningPath({ progress, lessons, isLoading, onStartLesson, onSt
                 transition={{ delay: levelIndex * 0.1 }}
                 className={cn(
                   "bg-surface border rounded-xl p-5 space-y-4",
-                  tutorialUnlocked ? "border-border-theme" : "border-border-theme opacity-50"
+                  unlocked ? "border-border-theme" : "border-border-theme opacity-50"
                 )}
               >
                 <div className="flex items-center justify-between">
@@ -138,40 +137,41 @@ export function LearningPath({ progress, lessons, isLoading, onStartLesson, onSt
                 </div>
 
                 {/* Tutorial Button */}
-                <div className="flex flex-col gap-2">
-                  {tutorialUnlocked && lessons?.[selectedDifficulty]?.[level] ? (
+                <div className="flex flex-col items-center gap-2">
+                  {unlocked && lessons?.[selectedDifficulty]?.[level] ? (
                     <a
                       href={lessons[selectedDifficulty][level].videoUrl || '#'}
                       onClick={() => onWatchTutorial(selectedDifficulty, level)}
                       target={lessons[selectedDifficulty][level].videoUrl ? "_blank" : undefined}
                       rel="noopener noreferrer"
                       className={cn(
-                        "w-full py-2.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 border shadow-lg",
+                        "w-full py-3.5 rounded-full text-[11px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 border shadow-lg hover:scale-[1.02] active:scale-[0.98]",
                         lessons[selectedDifficulty][level].videoUrl
                           ? !levelProgress.tutorialWatched
-                            ? "text-bg border-transparent hover:brightness-110"
-                            : "bg-accent-green/10 text-accent-green border-accent-green/30 hover:bg-accent-green/20"
+                            ? "bg-accent-amber text-bg border-accent-amber hover:brightness-110 animate-pulse-subtle"
+                            : "bg-accent-amber/10 text-accent-amber border-accent-amber/30 hover:bg-accent-amber/20"
                           : "bg-surface border-border-theme text-text-dim cursor-not-allowed opacity-50"
                       )}
-                      style={
-                        lessons[selectedDifficulty][level].videoUrl && !levelProgress.tutorialWatched
-                          ? { backgroundColor: '#FFC857' }
-                          : {}
-                      }
                     >
-                      <BookOpen size={14} />
+                      <BookOpen size={16} />
                       {lessons[selectedDifficulty][level].videoUrl
                         ? !levelProgress.tutorialWatched
-                          ? 'Start Here'
-                          : '✓ Tutorial Watched'
+                          ? 'START HERE: WATCH TUTORIAL'
+                          : 'Tutorial Watched'
                         : 'No Tutorial'}
                     </a>
                   ) : (
-                    <div className="w-full py-2.5 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-2 border border-border-theme bg-surface text-text-dim opacity-50">
-                      <Lock size={14} />
-                      Tutorial Locked
+                    <div className="w-full py-3.5 rounded-full text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-2 border border-border-theme bg-surface text-text-dim opacity-50">
+                      <Lock size={16} />
+                      [Tutorial Locked]
                     </div>
                   )}
+
+                  {/* Connecting line to first lesson */}
+                  <div className={cn(
+                    "w-0.5 h-6",
+                    levelProgress.tutorialWatched ? "bg-accent-green" : "bg-border-theme"
+                  )} />
                 </div>
 
                 {/* Lessons as circular nodes */}

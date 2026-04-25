@@ -1,12 +1,17 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { RotateCcw } from 'lucide-react';
-
+import { LessonCard } from './LessonCard';
+import { GhostKeyboard } from './GhostKeyboard';
+import { Lesson } from '../services/lessonService';
 import { Difficulty } from '../constants';
 import { cn, formatTime } from '../lib/utils';
 
 interface PracticeTabProps {
+  currentLevelLesson: Lesson | null;
+  levelLabel?: string;
   effectiveDifficulty: Difficulty;
+  lessonsLoading: boolean;
   wpm: number;
   accuracy: number;
   timeLeft: number;
@@ -25,7 +30,10 @@ interface PracticeTabProps {
 }
 
 export function PracticeTab({
+  currentLevelLesson,
+  levelLabel,
   effectiveDifficulty,
+  lessonsLoading,
   wpm,
   accuracy,
   timeLeft,
@@ -44,6 +52,12 @@ export function PracticeTab({
 }: PracticeTabProps) {
   return (
     <div className="space-y-6">
+      <LessonCard
+        lesson={currentLevelLesson}
+        isLoading={lessonsLoading}
+        levelLabel={levelLabel}
+      />
+
       <div className="grid grid-cols-4 gap-6">
         <div className="stat-card">
           <div className="text-[11px] font-bold text-text-dim uppercase tracking-[0.1em] mb-2">WPM</div>
@@ -114,11 +128,11 @@ export function PracticeTab({
         )}
 
         {!isStarted && !isFinished && !isAdvancingExercise && (
-          <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center pointer-events-none">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none rounded-2xl">
             <motion.p
               animate={{ opacity: [0.3, 0.7, 0.3] }}
               transition={{ repeat: Infinity, duration: 2 }}
-              className="text-text-dim text-[13px] font-medium"
+              className="text-text-dim font-medium"
             >
               Start typing to begin...
             </motion.p>
